@@ -1,0 +1,46 @@
+{
+  "appId": "orbi.desktop",
+  "productName": "Orbi",
+  "directories": {
+    "output": "dist",
+    "buildResources": "resources"
+  },
+  "electronDist": "node_modules/electron/dist",
+  "files": [
+    "out/**/*",
+    "!node_modules/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "resources",
+      "to": ".",
+      "filter": [
+        "icon.png",
+        "tray*.png"
+      ]
+    }
+  ],
+  "npmRebuild": false,
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "resources/icon.ico"
+  },
+  "nsis": {
+    "oneClick": true,
+    "perMachine": false,
+    "runAfterFinish": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Orbi",
+    "deleteAppDataOnUninstall": false,
+    "include": "resources/installer.nsh",
+    "artifactName": "Orbi-Setup-${version}.${ext}"
+  }
+}
