@@ -117,11 +117,12 @@ Configurações → Simulador de eventos (ou o menu da bandeja). Servem para ver
 No Windows, cada quadro de uma janela transparente é copiado inteiro, por isso:
 
 - a janela tem sempre o tamanho exato da ilha: cresce antes da transição e encolhe depois;
-- as animações contínuas rodam num relógio único com limite de quadros (nenhuma na ilha compacta, 20 fps no painel; ações e o olhar ficam limitados a 60, mesmo em monitores de 144 Hz);
-- o 3D (three.js) só é carregado quando você escolhe o 3D, e renderiza a 30 fps em repouso;
+- as animações contínuas rodam num relógio único com limite de quadros (nenhuma na ilha compacta, 20 fps no painel, 8 fps com o Orbi dormindo; ações e o olhar ficam limitados a 60). Entre um quadro e outro o relógio dorme num timer, em vez de acordar a cada atualização da tela: num monitor rápido, o painel caiu de 90–150 para cerca de 27 pedidos de quadro por segundo (2D) e de cerca de 180 para 50 (3D);
+- o 3D (three.js) só é carregado quando você escolhe o 3D; no cartão do painel renderiza a 20 fps em repouso e a 60 durante as ações;
+- dormindo, o processo principal para de ler a posição do cursor;
 - "Reduzir animações" desliga todo o movimento contínuo.
 
-Medido na versão de produção nesta máquina: ilha compacta com cerca de 3 a 8% de **um** núcleo (0,2–0,3% da CPU total), painel com 12% (medido antes da remoção do Tamagotchi). A RAM fica em torno de 370–440 MB, somando os processos do Electron.
+Medido na versão de produção nesta máquina (0.1): ilha compacta com cerca de 3 a 8% de **um** núcleo (0,2–0,3% da CPU total), painel com 12%. Depois das mudanças de 02/11/2026, medido numa instância de desenvolvimento ao lado de outros programas abertos: ilha compacta de 7 a 12%, painel 2D por volta de 16% e painel 3D por volta de 24% de um núcleo, com bastante variação entre amostras. A RAM fica em torno de 370–440 MB, somando os processos do Electron.
 
 ## Estrutura
 

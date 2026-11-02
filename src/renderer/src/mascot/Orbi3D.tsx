@@ -373,22 +373,27 @@ function Creature(props: Orbi2DProps) {
   );
 }
 
-/** Render at 30 fps when calm and 60 fps while something moves, whatever the display's refresh rate. */
-function FrameGovernor({ busyUntil }: { busyUntil: React.MutableRefObject<number> }) {
+/**
+ * Render at `calmFps` at rest and 60 fps while something moves, whatever the
+ * display's refresh rate. Between frames it sleeps on a timer rather than
+ * waking on every display refresh.
+ */
+function FrameGovernor({ busyUntil, calmFps }: { busyUntil: React.MutableRefObject<number>; calmFps: number }) {
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     let raf = 0;
-    let last = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = (now: number) => {
-      raf = requestAnimationFrame(tick);
-      const frameMs = now < busyUntil.current ? 1000 / 60 : 1000 / 30;
-      if (document.hidden || now - last < frameMs - 1) return;
-      last = now;
-      invalidate();
+      if (!document.hidden) invalidate();
+      const ms = document.hidden ? 1000 : now < busyUntil.current ? 1000 / 60 : 1000 / calmFps;
+      timer = setTimeout(() => (raf = requestAnimationFrame(tick)), ms);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [invalidate, busyUntil]);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, [invalidate, busyUntil, calmFps]);
   return null;
 }
 
@@ -419,7 +424,8 @@ export default function Orbi3D(props: Orbi2DProps) {
         <group position={[0, -0.05, 0]}>
           <Creature {...props} />
         </group>
-        <FrameGovernor busyUntil={busyUntil} />
+        {/* The small Orbi in the panel card breathes at 20 fps, like the 2D one. */}
+        <FrameGovernor busyUntil={busyUntil} calmFps={props.ambient === 'full' ? 30 : 20} />
       </Canvas>
     </div>
   );

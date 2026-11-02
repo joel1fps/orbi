@@ -91,25 +91,30 @@ function useTransformAttr(ref: RefObject<SVGGElement | null>, values: MotionValu
   buildRef.current = build;
   useEffect(() => {
     let raf = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let last = 0;
     const apply = (now = performance.now()) => {
       raf = 0;
-      // Frame budget: skip DOM writes that come faster than minMs.
+      // Frame budget: writes that come faster than minMs wait for the next slot on a timer, not frame by frame.
       if (minMs && now - last < minMs) {
-        raf = requestAnimationFrame(apply);
+        timer = setTimeout(() => {
+          timer = undefined;
+          raf = requestAnimationFrame(apply);
+        }, minMs - (now - last));
         return;
       }
       last = now;
       ref.current?.setAttribute('transform', buildRef.current());
     };
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(apply);
+      if (!raf && !timer) raf = requestAnimationFrame(apply);
     };
     apply(0);
     const offs = values.map((v) => v.on('change', schedule));
     return () => {
       offs.forEach((o) => o());
       if (raf) cancelAnimationFrame(raf);
+      if (timer) clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, values);
@@ -302,13 +307,18 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
     const frameMs = 1000 / (ambient === 'full' ? 30 : 20);
     const TAU = Math.PI * 2;
     let raf = 0;
-    let last = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let prev = performance.now();
+    // Sleep between frames instead of waking on every display refresh (144 Hz
+    // would be 144 wake-ups a second for 20 drawn frames). Asleep, a slow
+    // breath needs fewer frames; hidden, just check once a second.
+    const next = () => {
+      const ms = document.hidden ? 1000 : live.current.sleeping ? 125 : frameMs;
+      timer = setTimeout(() => (raf = requestAnimationFrame(loop)), ms);
+    };
     const loop = (now: number) => {
-      raf = requestAnimationFrame(loop);
-      // Asleep, a slow breath needs few frames.
-      if (document.hidden || now - last < (live.current.sleeping ? 125 : frameMs)) return;
-      last = now;
+      next();
+      if (document.hidden) return;
       const dt = Math.min(0.1, (now - prev) / 1000);
       prev = now;
       const t = now / 1000;
@@ -327,7 +337,10 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
       if (ambient === 'full') twinkle.current?.setAttribute('opacity', (0.2 + (0.7 * (1 - Math.cos((TAU * t) / 3.2))) / 2).toFixed(3));
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
   }, [ambient, still]);
 
   // Blinking: irregular, sometimes double.
