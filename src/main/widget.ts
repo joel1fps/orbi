@@ -6,7 +6,7 @@ import { store } from './store';
 
 /**
  * The widget is one transparent, frameless window that hugs the island
- * (pill → panel → Tamagotchi). On Windows every frame of a transparent window
+ * (pill → panel). On Windows every frame of a transparent window
  * is copied whole, so the window always matches the content: it grows before
  * a morph and shrinks once the morph has finished. The island's top centre is
  * the anchor, so resizing never moves it on screen. Empty areas let clicks

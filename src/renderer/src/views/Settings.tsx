@@ -44,8 +44,8 @@ export function SettingsSheet() {
       <div className="rows">
         <div className="row">
           <div className="row__main">
-            <div className="row__title">Estilo no Tamagotchi</div>
-            <div className="row__sub">O 3D é carregado só quando escolhido</div>
+            <div className="row__title">Estilo do Orbi</div>
+            <div className="row__sub">O 3D aparece no cartão do painel e só é carregado quando escolhido</div>
           </div>
           <Segmented
             label="Estilo"

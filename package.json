@@ -2,7 +2,7 @@
   "name": "orbi-desktop",
   "productName": "Orbi",
   "version": "0.1.0",
-  "description": "Orbi Desktop — o mascote do Orbit como Tamagotchi e central de ferramentas de IA",
+  "description": "Orbi Desktop: o mascote do Orbit e central de agentes de IA para desenvolvedores",
   "author": "Orbit",
   "main": "./out/main/index.js",
   "private": true,

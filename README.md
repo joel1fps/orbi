@@ -1,6 +1,6 @@
 # Orbi Desktop
 
-O Orbi, mascote do projeto Orbit, como bichinho virtual (Tamagotchi) e central de agentes de IA no Windows. Ele mora numa ilha flutuante no topo da tela, reage ao que o Claude Code e o Codex estão fazendo e deixa você aprovar pedidos de permissão sem trocar de janela.
+O Orbi, mascote do projeto Orbit, como central de agentes de IA para desenvolvedores no Windows. Ele mora numa ilha flutuante no topo da tela, reage ao que o Claude Code e o Codex estão fazendo e deixa você aprovar pedidos de permissão sem trocar de janela.
 
 A pesquisa (vídeo de referência e análise do Orbi original) está em [docs/PESQUISA_E_PLANO.md](docs/PESQUISA_E_PLANO.md).
 
@@ -24,13 +24,12 @@ O instalador (NSIS, um clique) instala só para o usuário atual em `%LOCALAPPDA
 
 `npm run icons` regenera `icon.png`, os ícones da bandeja e o `icon.ico` (16 a 256 px) a partir de `resources/orbi-original.svg`.
 
-## As três visualizações
+## As visualizações
 
 | Visualização | Como chegar | O que mostra |
 | --- | --- | --- |
-| **Compacta** (ilha) | Padrão ao abrir, `Esc` para voltar | Orbi pequeno e uma linha de status: o que o agente está fazendo agora ou como o Orbi está. Cresce sozinha para avisar início, conclusão, erro e pedidos de permissão. |
-| **Painel** | Clique na ilha ou `Ctrl+Alt+O` | Sessão ativa (projeto, passo atual, último passo, contador), ferramentas, uso do plano Claude/Codex e GitHub. Abas: início, Tamagotchi, ferramentas e configurações. |
-| **Tamagotchi** | Ícone da patinha no painel | Orbi grande em 2D ou 3D, fome, energia e humor, e os cuidados: alimentar, brincar, descansar e carinho. |
+| **Compacta** (ilha) | Padrão ao abrir, `Esc` para voltar | Orbi pequeno e uma linha de status: o que o agente está fazendo agora ou a última atividade real de um agente. Cresce sozinha para avisar início, conclusão, erro e pedidos de permissão. |
+| **Painel** | Clique na ilha ou `Ctrl+Alt+O` | Sessão ativa (projeto, passo atual, último passo, contador), ferramentas, uso do plano Claude/Codex e GitHub. Abas: início, ferramentas e configurações. |
 
 Arraste a ilha para qualquer lugar. Solte perto do topo da tela para ela encaixar de novo. Clicar fora do painel o recolhe.
 
@@ -38,12 +37,12 @@ Arraste a ilha para qualquer lugar. Solte perto do topo da tela para ela encaixa
 
 - Pisca, respira, balança as antenas, e o satélite orbita de verdade (passa na frente e atrás dele).
 - Segue o cursor com os olhos e o corpo em qualquer lugar da tela.
-- Clique: susto ou "boop". Vários cliques rápidos: cócegas. Clique e esfregue o cursor nele: carinho (corações).
-- Expressões: feliz, alegria, carinho, curioso, surpreso, apreensivo, concentrado, triste, sonolento, dormindo, comendo e recusando.
-- Coisas espontâneas quando está à toa: acena, olha em volta, se espreguiça, boceja quando está cansado.
+- No cartão do painel: clique para um "boop", vários cliques rápidos para cócegas, clique e esfregue o cursor para carinho (corações). O cursor em cima o deixa curioso.
+- Expressões: feliz, alegria, carinho, curioso, surpreso, apreensivo, concentrado e triste.
+- Coisas espontâneas quando está à toa: acena, olha em volta, se espreguiça.
 - Reage aos agentes: concentrado enquanto trabalham, brilho âmbar com "!" quando pedem permissão, verde com ✓ ao terminar, vermelho ao errar.
 
-Fome, energia e humor mudam com o tempo real, inclusive com o app fechado (com limite para não punir um fim de semana fora). O progresso fica salvo em `%APPDATA%\Orbi\orbi-state.json`.
+As preferências ficam salvas em `%APPDATA%\Orbi\orbi-state.json`. A versão 0.1 tinha um Tamagotchi (fome, energia e humor); ao abrir a versão nova, esses dados são descartados e o arquivo antigo fica guardado uma vez em `orbi-state.v1-backup.json`.
 
 ## Integrações e de onde vêm os dados
 
@@ -90,11 +89,11 @@ Configurações → Simulador de eventos (ou o menu da bandeja). Servem para ver
 No Windows, cada quadro de uma janela transparente é copiado inteiro, por isso:
 
 - a janela tem sempre o tamanho exato da ilha: cresce antes da transição e encolhe depois;
-- as animações contínuas rodam num relógio único com limite de quadros (nenhuma na ilha compacta, 20 fps no painel, 30 fps no Tamagotchi; ações e o olhar ficam limitados a 60, mesmo em monitores de 144 Hz);
+- as animações contínuas rodam num relógio único com limite de quadros (nenhuma na ilha compacta, 20 fps no painel; ações e o olhar ficam limitados a 60, mesmo em monitores de 144 Hz);
 - o 3D (three.js) só é carregado quando você escolhe o 3D, e renderiza a 30 fps em repouso;
 - "Reduzir animações" desliga todo o movimento contínuo.
 
-Medido na versão de produção nesta máquina: ilha compacta com cerca de 3 a 8% de **um** núcleo (0,2–0,3% da CPU total), painel com 12% e Tamagotchi com 12 a 28%. A RAM fica em torno de 370–440 MB, somando os processos do Electron.
+Medido na versão de produção nesta máquina: ilha compacta com cerca de 3 a 8% de **um** núcleo (0,2–0,3% da CPU total), painel com 12% (medido antes da remoção do Tamagotchi). A RAM fica em torno de 370–440 MB, somando os processos do Electron.
 
 ## Estrutura
 
@@ -107,8 +106,8 @@ src/main/            processo principal (janela, bandeja, atalhos)
 src/preload/         API segura exposta ao renderer
 src/renderer/src/
   mascot/            Orbi 2D (SVG animado), Orbi 3D (React Three Fiber), cérebro das expressões
-  views/             ilha, compacta, painel, permissão, Tamagotchi, ferramentas, configurações
-src/shared/          tipos e lógica do Tamagotchi (testada)
+  views/             ilha, compacta, painel, permissão, ferramentas, configurações
+src/shared/          tipos e utilitários
 resources/           orbi-original.svg (do Orbit), ícones, scripts da ponte e installer.nsh
 electron-builder.json  configuração do instalador
 ```

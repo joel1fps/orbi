@@ -1,4 +1,4 @@
-export type ViewMode = 'compact' | 'panel' | 'pet';
+export type ViewMode = 'compact' | 'panel';
 export type PanelTab = 'home' | 'tools' | 'settings';
 export type MascotStyle = '2d' | '3d';
 
@@ -178,20 +178,8 @@ export interface Settings {
   claudeAccountUsage: boolean;
 }
 
-export interface PetState {
-  satiety: number;
-  energy: number;
-  mood: number;
-  sleeping: boolean;
-  /** Last time the stats were brought up to date (Unix ms). */
-  updatedAt: number;
-  bornAt: number;
-  lastPettedAt?: number;
-}
-
 export interface InitialState {
   settings: Settings;
-  pet: PetState;
   hub: HubState;
   view: ViewMode;
   docked: boolean;

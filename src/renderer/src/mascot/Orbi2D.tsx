@@ -200,7 +200,7 @@ export interface Orbi2DProps {
   /**
    * How much idle motion to run. Every frame of the transparent window costs
    * a full copy, so: minimal (pill) = no idle loop, calm (panel) = 20 fps,
-   * full (Tamagotchi) = 30 fps. Actions and cursor follow are capped at 60.
+   * full = 30 fps. Actions and cursor follow are capped at 60.
    */
   ambient: Ambient;
   expression: Expression;

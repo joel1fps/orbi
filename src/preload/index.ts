@@ -6,7 +6,6 @@ import type {
   MainCommand,
   OrbiEvent,
   PermissionDecision,
-  PetState,
   Settings,
   SimulationKind,
   ViewMode,
@@ -36,7 +35,6 @@ const api = {
   dock: () => ipcRenderer.send('widget:dock'),
 
   updateSettings: (patch: Partial<Settings>): Promise<Settings> => ipcRenderer.invoke('settings:update', patch),
-  savePet: (pet: PetState) => ipcRenderer.send('pet:save', pet),
   respondPermission: (id: string, d: PermissionDecision) => ipcRenderer.send('permission:respond', id, d),
   simulate: (k: SimulationKind) => ipcRenderer.send('sim:run', k),
   claudeConnect: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('claude:connect'),

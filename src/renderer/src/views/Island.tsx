@@ -4,9 +4,8 @@ import { useApp } from '../store';
 import { Compact } from './Compact';
 import { Panel } from './Panel';
 import { PermissionCard } from './PermissionCard';
-import { Pet } from './Pet';
 
-const RADIUS = { compact: 22, toast: 26, permission: 26, panel: 26, pet: 28 } as const;
+const RADIUS = { compact: 22, toast: 26, permission: 26, panel: 26 } as const;
 // Room around the island for its shadow (matches .island box-shadow and .stage padding).
 const MARGIN = { side: 34, top: 6, bottom: 56 };
 
@@ -33,7 +32,7 @@ function useIslandDrag() {
 
   const onPointerDown = (e: RPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    if ((e.target as Element).closest('button, input, select, textarea, a, .no-drag, .mascot--stage')) return;
+    if ((e.target as Element).closest('button, input, select, textarea, a, .no-drag, .mascot--interactive')) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     st.current = { down: true, dragging: false, x: e.screenX, y: e.screenY, moved: false };
   };
@@ -76,7 +75,7 @@ export function Island() {
   // once answered, the island goes back to whatever it was showing.
   const inlinePermission = view === 'panel' && tab === 'home';
   const mode = permission && !inlinePermission ? 'permission' : view === 'compact' ? (toast ? 'toast' : 'compact') : view;
-  const contentKey = mode === 'panel' || mode === 'pet' ? mode : mode === 'permission' ? 'permission' : 'compact';
+  const contentKey = mode === 'panel' ? 'panel' : mode === 'permission' ? 'permission' : 'compact';
 
   return (
     <motion.div
@@ -99,8 +98,6 @@ export function Island() {
         >
           {contentKey === 'panel' ? (
             <Panel />
-          ) : contentKey === 'pet' ? (
-            <Pet />
           ) : contentKey === 'permission' && permission ? (
             <div style={{ width: 460, padding: 10 }}>
               <PermissionCard request={permission} compact />

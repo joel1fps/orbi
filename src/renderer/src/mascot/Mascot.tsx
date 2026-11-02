@@ -18,17 +18,17 @@ const GLOW: Record<NonNullable<Glow>, string> = {
 
 interface Props {
   size: number;
-  /** Tamagotchi stage: petting, boops and the 3D option. */
-  stage?: boolean;
+  /** Petting, boops, hover reactions and the 3D option. */
+  interactive?: boolean;
   /** Force 2D (tiny sizes). */
   flat?: boolean;
   className?: string;
 }
 
-export function Mascot({ size, stage = false, flat = false, className = '' }: Props) {
+export function Mascot({ size, interactive = false, flat = false, className = '' }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
-  const mood = useMascotMood(stage && hovered, stage);
+  const mood = useMascotMood(interactive && hovered);
   const reduceMotion = useApp((s) => s.settings.reduceMotion);
   const followCursor = useApp((s) => s.settings.followCursor);
   const style = useApp((s) => s.settings.mascotStyle);
@@ -40,12 +40,12 @@ export function Mascot({ size, stage = false, flat = false, className = '' }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mood.action]);
 
-  const interactions = usePetting(stage);
-  const use3d = stage && !flat && style === '3d';
+  const interactions = usePetting(interactive);
+  const use3d = interactive && !flat && style === '3d';
 
   const common = {
     size,
-    ambient: stage ? ('full' as const) : size < 70 ? ('minimal' as const) : ('calm' as const),
+    ambient: size < 70 ? ('minimal' as const) : ('calm' as const),
     expression: mood.expression,
     action: mood.action,
     working: mood.working,
@@ -58,11 +58,11 @@ export function Mascot({ size, stage = false, flat = false, className = '' }: Pr
   return (
     <div
       ref={ref}
-      className={`mascot ${stage ? 'mascot--stage' : ''} ${className}`}
+      className={`mascot ${interactive ? 'mascot--interactive' : ''} ${className}`}
       style={{ width: size, height: size }}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      {...(stage ? interactions : {})}
+      {...(interactive ? interactions : {})}
     >
       <div className="mascot__glow" style={{ ['--glow' as string]: mood.glow ? GLOW[mood.glow] : 'rgba(0,0,0,0)' }} />
       {use3d ? (
@@ -81,7 +81,6 @@ export function Mascot({ size, stage = false, flat = false, className = '' }: Pr
 // ---------- petting & boops ----------
 
 function usePetting(enabled: boolean) {
-  const petAct = useApp((s) => s.petAct);
   const react = useApp((s) => s.react);
   const st = useRef({ down: false, travel: 0, total: 0, t0: 0, boops: [] as number[] });
 
@@ -104,7 +103,7 @@ function usePetting(enabled: boolean) {
         // Rubbing back and forth over Orbi = carinho.
         if (s.travel > 120) {
           s.travel = 0;
-          petAct('pet');
+          react('pet');
         }
       },
       onPointerUp: () => {
@@ -114,15 +113,14 @@ function usePetting(enabled: boolean) {
         if (s.total < 8 && performance.now() - s.t0 < 450) {
           const now = performance.now();
           s.boops = [...s.boops.filter((t) => now - t < 2500), now];
-          if (useApp.getState().pet.sleeping) react('startle');
-          else if (s.boops.length >= 5) {
+          if (s.boops.length >= 5) {
             s.boops = [];
             react('tickle');
           } else react('boop');
         }
       },
     }),
-    [enabled, petAct, react],
+    [enabled, react],
   );
 }
 

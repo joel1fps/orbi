@@ -1,6 +1,6 @@
 import { app, globalShortcut, ipcMain, Menu, nativeImage, shell, Tray } from 'electron';
 import { spawn } from 'node:child_process';
-import type { MainCommand, PermissionDecision, PetState, Settings, SimulationKind, ViewMode } from '@shared/types';
+import type { MainCommand, PermissionDecision, Settings, SimulationKind, ViewMode } from '@shared/types';
 import { connectAntigravity, disconnectAntigravity, refreshAntigravityHookStatus, upgradeAntigravityConnection } from './bridge/antigravitySetup';
 import { isBridgeCli, prepareBridgeCli, runBridgeCli } from './bridge/cli';
 import { connectClaude, disconnectClaude, prepareBridge, refreshClaudeStatus, upgradeClaudeConnection } from './bridge/claudeSetup';
@@ -62,7 +62,6 @@ function buildTrayMenu() {
   const s = store.settings;
   return Menu.buildFromTemplate([
     { label: 'Abrir painel', click: () => command({ type: 'set-view', view: 'panel' }) },
-    { label: 'Tamagotchi', click: () => command({ type: 'set-view', view: 'pet' }) },
     { label: 'Modo compacto', click: () => command({ type: 'set-view', view: 'compact' }) },
     { type: 'separator' },
     {
@@ -159,7 +158,6 @@ function launch(target: string) {
 function registerIpc() {
   ipcMain.handle('orbi:initial', () => ({
     settings: store.settings,
-    pet: store.pet,
     hub: hub.snapshot(),
     view: getView(),
     docked: store.window.docked,
@@ -175,7 +173,6 @@ function registerIpc() {
     const { githubTokenSet: _ignored, ...rest } = patch;
     return applySettings(rest);
   });
-  ipcMain.on('pet:save', (_e, pet: PetState) => store.setPet(pet));
   ipcMain.on('permission:respond', (_e, id: string, decision: PermissionDecision) => hub.resolvePermission(id, decision));
   ipcMain.on('sim:run', (_e, kind: SimulationKind) => simulate(kind));
   // One "Conectar": the hooks, plus the account sign-in when Claude Code has no login yet.

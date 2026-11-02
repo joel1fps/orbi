@@ -1,5 +1,4 @@
-import { headline } from '@shared/pet';
-import { BUILTIN_TOOLS, isBuiltin } from '@shared/tools';
+import { ago, BUILTIN_TOOLS, isBuiltin } from '@shared/tools';
 import type { OrbiEvent, ToolId } from '@shared/types';
 import { SimTag } from '../components/ui';
 import { headlineWindow, levelTone, PLAN_NAME, PLAN_TONE, PLAN_TOOLS, UsageRing, useNow } from '../components/usage';
@@ -19,7 +18,8 @@ const toolLabel = (id: ToolId) => (isBuiltin(id) ? BUILTIN_TOOLS[id].name : 'Fer
 
 export function Compact() {
   const toast = useApp((s) => s.toast);
-  const pet = useApp((s) => s.pet);
+  const tools = useApp((s) => s.hub.tools);
+  const now = useNow(30_000);
   const live = useApp((s) =>
     s.hub.sessions.find((x) => (x.state === 'working' || x.state === 'waiting') && Date.now() - x.updatedAt < 120_000),
   );
@@ -48,8 +48,12 @@ export function Compact() {
     sub = live.state === 'waiting' ? live.project : live.current;
     dot = { color: live.state === 'waiting' ? '#5eead4' : '#4fb7a2', live: live.state === 'working' };
   } else {
-    title = headline(pet);
-    if (!pet.sleeping && (pet.satiety < 30 || pet.energy < 25 || pet.mood < 30)) dot = { color: '#f2b84b', live: false };
+    // Nothing running: the most recent real agent activity, if any.
+    title = 'Tudo tranquilo';
+    const recent = tools
+      .filter((t) => t.id !== 'github' && !t.id.startsWith('custom:') && t.lastActivityAt)
+      .sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0))[0];
+    if (recent) sub = `${recent.name} · ${ago(recent.lastActivityAt, now)}`;
   }
 
   return (

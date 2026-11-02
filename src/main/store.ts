@@ -1,16 +1,15 @@
 import { app, safeStorage } from 'electron';
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createPet, tick } from '@shared/pet';
-import type { PetState, PlanTool, PlanUsage, Settings, ViewMode } from '@shared/types';
+import type { PlanTool, PlanUsage, Settings, ViewMode } from '@shared/types';
+import { migrateState } from './migrate';
 
 type StoredSettings = Omit<Settings, 'githubTokenSet'>;
 
 interface Persisted {
-  version: 1;
+  version: 2;
   settings: StoredSettings;
-  pet: PetState;
   /** Island anchor (top centre of the widget) when it is not docked. */
   window: { cx?: number; y?: number; docked: boolean };
   view: ViewMode;
@@ -39,13 +38,16 @@ let timer: NodeJS.Timeout | null = null;
 
 export function loadStore(): void {
   mkdirSync(dataDir(), { recursive: true });
-  const now = Date.now();
   try {
-    const raw = JSON.parse(readFileSync(file(), 'utf8')) as Partial<Persisted>;
+    const migrated = migrateState(JSON.parse(readFileSync(file(), 'utf8')));
+    if (!migrated) throw new Error('unreadable state');
+    // Version 2 dropped the Tamagotchi: keep the original file once, by hand-restorable.
+    const backup = join(dataDir(), 'orbi-state.v1-backup.json');
+    if (migrated.hadPet && !existsSync(backup)) copyFileSync(file(), backup);
+    const raw = migrated.state as Partial<Persisted>;
     state = {
-      version: 1,
+      version: 2,
       settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) },
-      pet: raw.pet ? tick(raw.pet, now) : createPet(now),
       window: raw.window ?? { docked: true },
       // Always wake up as the small island; the user opens it when they want.
       view: 'compact',
@@ -55,9 +57,8 @@ export function loadStore(): void {
     };
   } catch {
     state = {
-      version: 1,
+      version: 2,
       settings: { ...DEFAULT_SETTINGS },
-      pet: createPet(now),
       window: { docked: true },
       view: 'compact',
       bridgeToken: randomBytes(18).toString('base64url'),
@@ -100,13 +101,6 @@ export const store = {
     state.settings = { ...state.settings, ...patch };
     persist();
     return store.settings;
-  },
-  get pet(): PetState {
-    return state.pet;
-  },
-  setPet(pet: PetState) {
-    state.pet = pet;
-    persist();
   },
   get window() {
     return state.window;

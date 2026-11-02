@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, PawPrint, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
 import { ago, BUILTIN_TOOLS, isBuiltin, until } from '@shared/tools';
 import type { AgentSession, CiState, PlanUsage, ToolStatus } from '@shared/types';
 import { SimTag, ToolFace } from '../components/ui';
@@ -29,9 +29,6 @@ function PanelHead() {
     <div className="panel__head">
       <button className="tab" aria-pressed={tab === 'home'} aria-label="Início" title="Início" onClick={() => setTab('home')}>
         <House size={15} />
-      </button>
-      <button className="tab" aria-label="Tamagotchi" title="Cuidar do Orbi" onClick={() => setView('pet')}>
-        <PawPrint size={15} />
       </button>
       <button className="tab" aria-pressed={tab === 'tools'} aria-label="Ferramentas" title="Ferramentas" onClick={() => setTab('tools')}>
         <LayoutGrid size={15} />
@@ -122,23 +119,17 @@ function SessionDetail() {
   const sessions = useApp((s) => s.hub.sessions);
   const index = useApp((s) => s.sessionIndex);
   const setIndex = useApp((s) => s.setSessionIndex);
-  const pet = useApp((s) => s.pet);
 
   if (sessions.length === 0) {
     return (
       <div className="hero">
         <div className="hero__glow" style={{ ['--glow' as string]: 'rgba(79, 183, 162, 0.16)' }} />
-        <Mascot size={96} flat />
+        <Mascot size={96} interactive />
         <div className="hero__info">
           <div className="hero__now">Nenhum agente trabalhando agora</div>
           <div className="hero__summary">
             O Orbi acompanha o Claude Code, o Codex e o Antigravity neste computador e reage quando uma tarefa começa, termina ou precisa de você.
           </div>
-          {pet.satiety < 30 || pet.energy < 25 ? (
-            <div className="hero__step">
-              <span>O Orbi também precisa de cuidados. Abra a aba com a patinha.</span>
-            </div>
-          ) : null}
         </div>
       </div>
     );
@@ -153,7 +144,7 @@ function SessionDetail() {
   return (
     <div className="hero">
       <div className="hero__glow" style={{ ['--glow' as string]: glow }} />
-      <Mascot size={96} flat />
+      <Mascot size={96} interactive />
       <div className="hero__info">
         <div className="hero__top">
           <span className={`dot${s.state === 'working' ? ' dot--live' : ''}`} style={{ background: tool.color, color: tool.color }} />

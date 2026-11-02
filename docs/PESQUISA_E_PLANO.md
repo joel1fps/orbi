@@ -1,5 +1,7 @@
 # Orbi Desktop — pesquisa e plano
 
+> **Nota (02/11/2026):** documento histórico da primeira versão. O Tamagotchi foi removido; o rumo atual está em [AUDITORIA_ORBIT_COUCOU.md](AUDITORIA_ORBIT_COUCOU.md).
+
 ## 1. O que o vídeo mostra (Coucou for Windows 0.2, 49 s)
 
 Analisado quadro a quadro (0,5 s → 48 s), com zoom na interface.
