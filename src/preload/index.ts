@@ -46,6 +46,7 @@ const api = {
   claudeConnect: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('claude:connect'),
   claudeLogin: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('claude:login'),
   codexConnect: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('codex:connect'),
+  codexHooks: (on: boolean): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('codex:hooks', on),
   antigravityOpen: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('antigravity:open'),
   antigravityConnect: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('antigravity:connect'),
   antigravityDisconnect: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('antigravity:disconnect'),

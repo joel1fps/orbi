@@ -5,6 +5,7 @@ import { BUILTIN_TOOLS, ago } from '@shared/tools';
 import type {
   AgentSession,
   AntigravityBridgeState,
+  CodexBridgeState,
   ClaudeBridgeState,
   GithubError,
   GithubSnapshot,
@@ -55,6 +56,10 @@ class Hub {
     serverPort: 0,
     serverOk: false,
     settingsPath: join(process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude'), 'settings.json'),
+  };
+  codex: CodexBridgeState = {
+    hooksInstalled: false,
+    hooksPath: join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'hooks.json'),
   };
   antigravity: AntigravityBridgeState = {
     hooksInstalled: false,
@@ -226,6 +231,11 @@ class Hub {
     this.changed();
   }
 
+  setCodex(patch: Partial<CodexBridgeState>) {
+    this.codex = { ...this.codex, ...patch };
+    this.changed();
+  }
+
   setAntigravity(patch: Partial<AntigravityBridgeState>) {
     this.antigravity = { ...this.antigravity, ...patch };
     this.changed();
@@ -352,6 +362,7 @@ class Hub {
       github: this.github,
       claude: this.claude,
       antigravity: this.antigravity,
+      codex: this.codex,
     };
   }
 

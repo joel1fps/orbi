@@ -139,6 +139,13 @@ export interface ClaudeBridgeState {
   settingsPath: string;
 }
 
+/** Orbi's PermissionRequest hook in ~/.codex/hooks.json. */
+export interface CodexBridgeState {
+  hooksInstalled: boolean;
+  lastHookAt?: number;
+  hooksPath: string;
+}
+
 export interface AntigravityBridgeState {
   hooksInstalled: boolean;
   lastHookAt?: number;
@@ -155,6 +162,7 @@ export interface HubState {
   github?: GithubSnapshot | GithubError;
   claude: ClaudeBridgeState;
   antigravity: AntigravityBridgeState;
+  codex: CodexBridgeState;
 }
 
 export interface CustomTool {

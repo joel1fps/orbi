@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http';
 import { timingSafeEqual } from 'node:crypto';
 import { handleAntigravityHook, type AntigravityHookPayload } from '../integrations/antigravity';
 import { handleHook, handlePermissionHook, type HookPayload } from '../integrations/claude';
+import { handleCodexPermission, type CodexPermissionPayload } from '../integrations/codexHooks';
 import { hub } from '../hub';
 import { isAgyHookEvent } from './antigravityHookSettings';
 
@@ -28,7 +29,7 @@ export function startBridgeServer(token: string): Promise<number> {
         res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true,"app":"orbi"}');
         return;
       }
-      if (req.method !== 'POST' || (req.url !== '/hook' && req.url !== '/agy-hook')) {
+      if (req.method !== 'POST' || (req.url !== '/hook' && req.url !== '/agy-hook' && req.url !== '/codex-hook')) {
         res.writeHead(404).end();
         return;
       }
@@ -67,14 +68,18 @@ export function startBridgeServer(token: string): Promise<number> {
           res.writeHead(400).end();
           return;
         }
+        const codex = req.url === '/codex-hook';
         if (payload.hook_event_name === 'PermissionRequest') {
-          // If Claude Code gives up (hook timeout, session closed), forget the card.
+          // If the agent gives up (hook timeout, session closed), forget the card.
           const gone = new AbortController();
           let answered = false;
           res.on('close', () => {
             if (!answered) gone.abort();
           });
-          const decision = await handlePermissionHook(payload, gone.signal);
+          // Codex and Claude Code answer in the same hookSpecificOutput shape.
+          const decision = codex
+            ? await handleCodexPermission(payload as CodexPermissionPayload, gone.signal)
+            : await handlePermissionHook(payload, gone.signal);
           answered = true;
           if (res.destroyed) return;
           const out =
@@ -91,6 +96,7 @@ export function startBridgeServer(token: string): Promise<number> {
           return;
         }
         res.writeHead(200, { 'content-type': 'application/json' }).end('{}');
+        if (codex) return; // Codex activity comes from its session files
         try {
           handleHook(payload);
         } catch (err) {

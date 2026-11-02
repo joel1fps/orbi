@@ -80,6 +80,7 @@ Nada é estimado ou inventado. Sem fonte de dados, aparece "não instalado", "n�
 | | Em tempo real, depois de **Conectar** (aba Ferramentas) | Hooks oficiais do Claude Code: início, cada ferramenta usada, conclusão, erros e **pedidos de permissão respondidos na ilha** (Permitir `Y`, Negar `N`, ou Decidir no terminal). |
 | | Uso do plano (Pro/Max) | Campo `rate_limits` da statusline do Claude Code (5 horas e semana). |
 | **Codex** | Funciona sem configurar | Sessões em `~/.codex/sessions`: tarefas, comandos com código de saída e limites de 5 horas e semana do plano. |
+| | Permissões na ilha, depois de **Conectar permissões** (aba Ferramentas) | Um hook `PermissionRequest` em `~/.codex/hooks.json` (com backup; desconectar remove só ele). O Codex só o executa depois que você o aprova uma vez com `/hooks`. Sem resposta no tempo escolhido, o Codex pergunta no terminal. |
 | **Gemini CLI** | Detecção | Comando `gemini` e `~/.gemini/tmp`. Não está instalado nesta máquina. |
 | **Hermes Agent** | Detecção | Comando `hermes` e `~/.hermes`. Não está instalado nesta máquina. |
 | **GitHub** | Depois de colar um token (ou com `gh auth login`) | API GraphQL oficial: seus PRs abertos com estado do CI, revisões pendentes, CI do branch padrão de um repositório escolhido e sequência de contribuições. O token fica criptografado pelo Windows (DPAPI). |
@@ -108,6 +109,7 @@ Configurações → Simulador de eventos (ou o menu da bandeja). Servem para ver
 | `Ctrl+Alt+O` | Abrir ou recolher o painel |
 | `Y` / `N` | Permitir ou negar, com a ilha em foco |
 | `Ctrl+Alt+Y` / `Ctrl+Alt+N` | Permitir ou negar de qualquer lugar, enquanto houver um pedido |
+| `Ctrl+Alt+A` | Traz a ilha para a frente com o foco do teclado, para responder com `Y`/`N`, enquanto houver um pedido |
 | `Esc` | Recolher |
 
 ## Desempenho

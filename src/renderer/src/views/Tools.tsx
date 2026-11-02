@@ -15,7 +15,15 @@ export function ToolsSheet() {
       <div className="group-title">Agentes de IA</div>
       <div className="rows">
         {agents.map((t) =>
-          t.id === 'claude' ? <ClaudeRow key={t.id} t={t} /> : t.id === 'antigravity' ? <AntigravityRow key={t.id} t={t} /> : <AgentRow key={t.id} t={t} />,
+          t.id === 'claude' ? (
+            <ClaudeRow key={t.id} t={t} />
+          ) : t.id === 'codex' ? (
+            <CodexRow key={t.id} t={t} />
+          ) : t.id === 'antigravity' ? (
+            <AntigravityRow key={t.id} t={t} />
+          ) : (
+            <AgentRow key={t.id} t={t} />
+          ),
         )}
       </div>
 
@@ -105,6 +113,51 @@ function ClaudeRow({ t }: { t: ToolStatus }) {
         </div>
       </div>
       <AccountUsageRow />
+    </>
+  );
+}
+
+function CodexRow({ t }: { t: ToolStatus }) {
+  const codex = useApp((s) => s.hub.codex);
+  const serverOk = useApp((s) => s.hub.claude.serverOk);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const connected = codex.hooksInstalled;
+
+  const toggle = async () => {
+    setBusy(true);
+    const r = await window.orbi.codexHooks(!connected);
+    setMsg(r.message);
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <div className="row">
+        <ToolFace color={t.color} size={26} dim={t.availability === 'not-installed'} />
+        <div className="row__main">
+          <ToolTitle t={t} />
+          <div className="row__sub" title={t.source}>
+            {t.detail}
+            {codex.lastHookAt ? `. Último pedido ${ago(codex.lastHookAt)}` : ''}
+          </div>
+        </div>
+        {t.availability !== 'not-installed' ? (
+          <button className={`btn${connected ? ' btn--ghost' : ' btn--light'}`} disabled={busy || !serverOk} onClick={() => void toggle()}>
+            {connected ? 'Desconectar' : 'Conectar permissões'}
+          </button>
+        ) : null}
+      </div>
+      <div className="row">
+        <div className="row__main">
+          <div className="row__note">
+            {connected
+              ? 'Conectado: pedidos de permissão do Codex aparecem na ilha (Permitir Y, Negar N). Sem resposta no tempo escolhido, o Codex pergunta no terminal. O Codex só usa o hook depois que você o aprova uma vez com /hooks.'
+              : 'As tarefas do Codex já aparecem lendo ~/.codex/sessions. Conectar adiciona um hook de permissão ao ~/.codex/hooks.json, com backup, para responder pela ilha. Desconectar remove só o que o Orbi adicionou.'}
+          </div>
+          {msg ? <div className="row__note" style={{ color: '#7ed5c3', marginTop: 4 }}>{msg}</div> : null}
+        </div>
+      </div>
     </>
   );
 }

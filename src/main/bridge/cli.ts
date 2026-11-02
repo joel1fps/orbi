@@ -4,10 +4,11 @@ import { homedir, tmpdir } from 'node:os';
 import { request } from 'node:http';
 import { join } from 'node:path';
 import { AGY_HOOK_PREFIX, stripAntigravityOrbi, type AntigravityHooksDoc } from './antigravityHookSettings';
+import { CODEX_HOOK_FLAG, stripCodexOrbi, type CodexHooksDoc } from './codexHookSettings';
 import { DISCONNECT_FLAG, HOOK_FLAG, stripOrbi, type ClaudeSettings } from './hookSettings';
 
 /**
- * Claude Code runs `Orbi --orbi-hook` and Antigravity runs
+ * Claude Code runs `Orbi --orbi-hook`, Codex `Orbi --orbi-codex-hook` (permissions only) and Antigravity runs
  * `Orbi --orbi-agy-hook=<Event>` for each hook event. This mode never opens a
  * window: it forwards the event to the running Orbi over 127.0.0.1 and exits.
  * If Orbi isn't running it exits 0 silently (returning valid no-op JSON when
@@ -15,7 +16,8 @@ import { DISCONNECT_FLAG, HOOK_FLAG, stripOrbi, type ClaudeSettings } from './ho
  */
 const agyHookArg = () => process.argv.find((a) => a.startsWith(AGY_HOOK_PREFIX));
 
-export const isBridgeCli = () => process.argv.includes(HOOK_FLAG) || process.argv.includes(DISCONNECT_FLAG) || Boolean(agyHookArg());
+export const isBridgeCli = () =>
+  process.argv.includes(HOOK_FLAG) || process.argv.includes(CODEX_HOOK_FLAG) || process.argv.includes(DISCONNECT_FLAG) || Boolean(agyHookArg());
 
 /** Where the running Orbi keeps the bridge port/token (resolved before we move userData). */
 let bridgeConfigPath = '';
@@ -99,6 +101,22 @@ function disconnect(): never {
     trace(`antigravity disconnect failed: ${String(err)}`);
   }
 
+  try {
+    const codexPath = join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'hooks.json');
+    if (existsSync(codexPath)) {
+      const raw = readFileSync(codexPath, 'utf8');
+      const doc = raw.trim() ? (JSON.parse(raw) as CodexHooksDoc) : {};
+      const clean = stripCodexOrbi(doc);
+      if (JSON.stringify(clean) !== JSON.stringify(doc)) {
+        writeFileSync(`${codexPath}.orbi-backup-uninstall`, raw);
+        writeFileSync(`${codexPath}.orbi-tmp`, JSON.stringify(clean, null, 2) + '\n');
+        renameSync(`${codexPath}.orbi-tmp`, codexPath);
+      }
+    }
+  } catch (err) {
+    trace(`codex disconnect failed: ${String(err)}`);
+  }
+
   return done();
 }
 
@@ -170,7 +188,8 @@ export async function runBridgeCli(): Promise<void> {
     {
       host: '127.0.0.1',
       port: cfg.port,
-      path: '/hook',
+      // Codex's permission hook has its own route so the card is labelled Codex.
+      path: process.argv.includes(CODEX_HOOK_FLAG) ? '/codex-hook' : '/hook',
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-orbi-token': cfg.token },
       timeout: waitForAnswer ? (cfg.permissionTimeoutSec + 10) * 1000 : 4000,

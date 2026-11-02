@@ -6,6 +6,7 @@ import type { IdleLevel, MainCommand, PermissionDecision, Settings, SimulationKi
 import { connectAntigravity, disconnectAntigravity, refreshAntigravityHookStatus, upgradeAntigravityConnection } from './bridge/antigravitySetup';
 import { isBridgeCli, prepareBridgeCli, runBridgeCli } from './bridge/cli';
 import { connectClaude, disconnectClaude, prepareBridge, refreshClaudeStatus, upgradeClaudeConnection } from './bridge/claudeSetup';
+import { connectCodexHooks, disconnectCodexHooks, refreshCodexStatus } from './bridge/codexSetup';
 import { startBridgeServer, stopBridgeServer } from './bridge/server';
 import { hub } from './hub';
 import { startClaudeWatchers } from './integrations/claude';
@@ -150,6 +151,10 @@ function syncPermissionShortcuts(count: number) {
       globalShortcut.unregister(accel);
     }
   }
+  // Ctrl+Alt+A brings the island forward with keyboard focus, so Y / N answer from there.
+  const jump = 'Control+Alt+A';
+  if (count > 0 && !globalShortcut.isRegistered(jump)) globalShortcut.register(jump, () => (showWidget(), getWidget()?.focus()));
+  else if (count === 0 && globalShortcut.isRegistered(jump)) globalShortcut.unregister(jump);
   if (count > 0) showWidget();
 }
 
@@ -228,6 +233,7 @@ function registerIpc() {
   });
   ipcMain.handle('claude:login', () => loginClaudeAccount());
   ipcMain.handle('codex:connect', () => connectCodex());
+  ipcMain.handle('codex:hooks', (_e, on: unknown) => (on === true ? connectCodexHooks() : disconnectCodexHooks()));
   ipcMain.handle('antigravity:open', () => openAntigravity());
   ipcMain.handle('antigravity:connect', () => connectAntigravity());
   ipcMain.handle('antigravity:disconnect', () => disconnectAntigravity());
@@ -276,9 +282,11 @@ app.whenReady().then(async () => {
   upgradeAntigravityConnection();
   refreshClaudeStatus();
   refreshAntigravityHookStatus();
+  refreshCodexStatus();
   setInterval(() => {
     refreshClaudeStatus();
     refreshAntigravityHookStatus();
+    refreshCodexStatus();
   }, 30_000).unref();
 
   startDetection();
