@@ -1,5 +1,5 @@
-import { MotionConfig } from 'motion/react';
-import { useEffect } from 'react';
+import { motion, MotionConfig } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { useApp } from './store';
 import { Island } from './views/Island';
 
@@ -60,6 +60,8 @@ function useKeys() {
 
 export function App() {
   const reduceMotion = useApp((s) => s.settings.reduceMotion);
+  // Read once: the entrance belongs to the first render of this run.
+  const [intro] = useState(() => useApp.getState().intro);
   useClickThrough();
   useKeys();
   useEffect(() => {
@@ -69,7 +71,15 @@ export function App() {
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
       <div className="stage">
-        <Island />
+        {/* The island grows out of a point at the top before Orbi drops in. */}
+        <motion.div
+          style={{ transformOrigin: 'top center' }}
+          initial={intro ? { opacity: 0, scale: 0.2, y: -8 } : false}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+        >
+          <Island />
+        </motion.div>
       </div>
     </MotionConfig>
   );

@@ -35,12 +35,13 @@ Arraste a ilha para qualquer lugar. Solte perto do topo da tela para ela encaixa
 
 ## O Orbi vivo
 
-- Pisca, respira, balança as antenas, e o satélite orbita de verdade (passa na frente e atrás dele).
-- Segue o cursor com os olhos e o corpo em qualquer lugar da tela.
-- No cartão do painel: clique para um "boop", vários cliques rápidos para cócegas, clique e esfregue o cursor para carinho (corações). O cursor em cima o deixa curioso.
-- Expressões: feliz, alegria, carinho, curioso, surpreso, apreensivo, concentrado e triste.
-- Coisas espontâneas quando está à toa: acena, olha em volta, se espreguiça.
-- Reage aos agentes: concentrado enquanto trabalham, brilho âmbar com "!" quando pedem permissão, verde com ✓ ao terminar, vermelho ao errar.
+- Ao abrir: a ilha nasce de um ponto no topo, o Orbi cai dentro dela, acena, pisca duas vezes e olha em volta. Uma vez por execução; recarregar a interface não repete, e "Reduzir animações" pula.
+- Pisca, respira, balança as antenas, e o satélite orbita de verdade (passa na frente e atrás dele). Troca de expressão sempre por trás de uma piscada, sem saltos.
+- Segue o cursor com os olhos e o corpo em qualquer lugar da tela. O cursor em cima dele o deixa curioso.
+- No cartão do painel: clique para um "boop", vários cliques rápidos para cócegas, clique e esfregue o cursor para carinho (corações). Abrir o painel faz ele dar um pulinho.
+- Reage aos agentes: curioso enquanto pensam, concentrado enquanto executam, brilho âmbar com "!" quando pedem permissão, verde com ✓ ao terminar, vermelho ao errar, sonolento quando um limite do plano chega a 100%.
+- Sem você no computador: sonolento e bocejando depois de 5 minutos, dormindo (com "zzz" e menos quadros por segundo) depois de 15. Se espreguiça quando você volta. Um agente trabalhando o mantém acordado.
+- Prioridades: permissão > erro > limite > trabalho > ocioso, e uma reação decorativa (boop, carinho) nunca interrompe uma importante (concluído, erro); o "!" de uma permissão fica visível o tempo todo. As regras estão em `src/renderer/src/mascot/state.ts`, com testes.
 
 As preferências ficam salvas em `%APPDATA%\Orbi\orbi-state.json`. A versão 0.1 tinha um Tamagotchi (fome, energia e humor); ao abrir a versão nova, esses dados são descartados e o arquivo antigo fica guardado uma vez em `orbi-state.v1-backup.json`.
 

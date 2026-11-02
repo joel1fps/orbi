@@ -28,7 +28,7 @@ interface Props {
 export function Mascot({ size, interactive = false, flat = false, className = '' }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
-  const mood = useMascotMood(interactive && hovered);
+  const mood = useMascotMood(hovered);
   const reduceMotion = useApp((s) => s.settings.reduceMotion);
   const followCursor = useApp((s) => s.settings.followCursor);
   const style = useApp((s) => s.settings.mascotStyle);
@@ -36,7 +36,13 @@ export function Mascot({ size, interactive = false, flat = false, className = ''
   const look = useLook(ref, followCursor && !mood.sleeping && !reduceMotion);
 
   useEffect(() => {
-    if (mood.action?.name === 'look-around' && !reduceMotion) look.lookAround();
+    if (reduceMotion) return;
+    if (mood.action?.name === 'look-around') look.lookAround();
+    // After the entrance, a look around before settling in.
+    if (mood.action?.name === 'enter') {
+      const t = setTimeout(look.lookAround, 1900);
+      return () => clearTimeout(t);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mood.action]);
 

@@ -183,6 +183,8 @@ export interface InitialState {
   hub: HubState;
   view: ViewMode;
   docked: boolean;
+  /** First window of this run: play the entrance once (not on a renderer reload). */
+  intro: boolean;
 }
 
 export type MainCommand =
@@ -198,3 +200,6 @@ export interface CursorInfo {
   x: number;
   y: number;
 }
+
+/** How long the user has been away from the computer (no keyboard or mouse). */
+export type IdleLevel = 'active' | 'drowsy' | 'asleep';

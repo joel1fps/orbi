@@ -254,6 +254,12 @@ function Creature(props: Orbi2DProps) {
         orbitSpeed.current = 6;
         setTimeout(() => (orbitSpeed.current = props.working ? 3.2 : 1), 1100);
         break;
+      case 'enter':
+        void animate(hop, [1.4, 1.4, 0, 0.22, 0], { duration: 0.9, times: [0, 0.05, 0.55, 0.78, 1], ease: 'easeIn' });
+        void animate(sy, [1, 1.06, 1.06, 0.84, 1.05, 1], { duration: 1 });
+        void animate(sx, [1, 0.95, 0.95, 1.14, 0.97, 1], { duration: 1 });
+        void animate(armRot, [0, 0, 0.32, -0.25, 0.32, -0.25, 0], { duration: 2.2 });
+        break;
       case 'wave':
         void animate(armRot, [0, 0.32, -0.25, 0.32, -0.25, 0], { duration: 1.3 });
         break;

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type {
   CursorInfo,
   HubState,
+  IdleLevel,
   InitialState,
   MainCommand,
   OrbiEvent,
@@ -25,6 +26,7 @@ const api = {
   onCommand: (cb: (c: MainCommand) => void) => on('orbi:command', cb),
   onSettings: (cb: (s: Settings) => void) => on('orbi:settings', cb),
   onDocked: (cb: (d: boolean) => void) => on('orbi:docked', cb),
+  onIdle: (cb: (l: IdleLevel) => void) => on('orbi:idle', cb),
 
   setInteractive: (on: boolean) => ipcRenderer.send('widget:interactive', on),
   dragStart: () => ipcRenderer.send('widget:drag-start'),

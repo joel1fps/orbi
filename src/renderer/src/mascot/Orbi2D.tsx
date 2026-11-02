@@ -1,5 +1,5 @@
 import { animate, useMotionValue, type MotionValue } from 'motion/react';
-import { memo, useEffect, useRef, type RefObject } from 'react';
+import { memo, useEffect, useRef, useState, type RefObject } from 'react';
 import type { Expression, MascotAction } from './brain';
 
 /**
@@ -213,7 +213,9 @@ export interface Orbi2DProps {
 }
 
 export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, working, sleeping, still, lookX, lookY }: Orbi2DProps) {
-  const face = FACES[expression];
+  // The face on screen trails the requested one by a blink, so it never jumps.
+  const [shown, setShown] = useState(expression);
+  const face = FACES[shown];
 
   const hop = useMotionValue(0);
   const sx = useMotionValue(1);
@@ -224,6 +226,26 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
   const antL = useMotionValue(0);
   const antR = useMotionValue(0);
   const blink = useMotionValue(1);
+
+  useEffect(() => {
+    if (expression === shown) {
+      if (blink.get() < 1) void animate(blink, 1, { duration: 0.1 });
+      return;
+    }
+    if (still) {
+      setShown(expression);
+      return;
+    }
+    const closing = animate(blink, 0.08, { duration: 0.07 });
+    const t = setTimeout(() => {
+      setShown(expression);
+      void animate(blink, 1, { duration: 0.12 });
+    }, 75);
+    return () => {
+      clearTimeout(t);
+      closing.stop();
+    };
+  }, [expression, shown, still, blink]);
   // Displays can run at 144 Hz; Orbi never needs more than 60 writes per second.
   const budget = ambient === 'full' ? 1000 / 60 : 1000 / 30;
 
@@ -284,7 +306,8 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
     let prev = performance.now();
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      if (document.hidden || now - last < frameMs) return;
+      // Asleep, a slow breath needs few frames.
+      if (document.hidden || now - last < (live.current.sleeping ? 125 : frameMs)) return;
       last = now;
       const dt = Math.min(0.1, (now - prev) / 1000);
       prev = now;
@@ -331,6 +354,20 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
   useEffect(() => {
     if (!action || still) return;
     switch (action.name) {
+      case 'enter': {
+        // Drops in, lands with a squash, shakes the antennae out, waves and blinks twice.
+        const land = { duration: 1, times: [0, 0.3, 0.5, 0.6, 0.8, 1] };
+        void animate(hop, [-46, -46, 0, -7, 0], { duration: 0.9, times: [0, 0.05, 0.55, 0.78, 1], ease: 'easeIn' });
+        void animate(sy, [1, 1.08, 1.08, 0.82, 1.06, 1], land);
+        void animate(sx, [1, 0.94, 0.94, 1.16, 0.97, 1], land);
+        void animate(antL, [0, 18, 18, -14, 8, 0], { duration: 1.1 });
+        void animate(antR, [0, -18, -18, 14, -8, 0], { duration: 1.1 });
+        void animate(armR, [0, 0, -18, 14, -18, 14, 0], { duration: 2.2, times: [0, 0.45, 0.58, 0.7, 0.8, 0.9, 1] });
+        void animate(blink, [1, 0.08, 1], { duration: 0.16, delay: 1.5 });
+        void animate(blink, [1, 0.08, 1], { duration: 0.16, delay: 1.78 });
+        boostUntil.current = performance.now() + 1400;
+        break;
+      }
       case 'hop':
         void animate(sy, [1, 0.9, 1.06, 0.94, 1], { duration: 0.6, times: [0, 0.18, 0.45, 0.8, 1] });
         void animate(sx, [1, 1.08, 0.96, 1.05, 1], { duration: 0.6, times: [0, 0.18, 0.45, 0.8, 1] });

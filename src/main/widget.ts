@@ -28,6 +28,8 @@ let cursorTimer: NodeJS.Timeout | null = null;
 let shrinkTimer: NodeJS.Timeout | null = null;
 let lastCursor: CursorInfo = { x: -1, y: -1 };
 let moveAnim: NodeJS.Timeout | null = null;
+/** Off when nobody needs the cursor: follow disabled, reduced motion, or Orbi asleep. */
+let cursorEnabled = true;
 
 export const getWidget = () => win;
 export const getView = () => view;
@@ -246,7 +248,7 @@ export function hideWidget() {
  * only sends when it actually moved.
  */
 function startCursor() {
-  if (cursorTimer || !win) return;
+  if (cursorTimer || !win || !cursorEnabled) return;
   cursorTimer = setInterval(() => {
     if (!win || !win.isVisible()) return;
     const c = screen.getCursorScreenPoint();
@@ -265,4 +267,10 @@ function stopCursor() {
 
 export function send(channel: string, payload: unknown) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+}
+
+export function setCursorTracking(on: boolean) {
+  cursorEnabled = on;
+  if (on && win?.isVisible()) startCursor();
+  else if (!on) stopCursor();
 }

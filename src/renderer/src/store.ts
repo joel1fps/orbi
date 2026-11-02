@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import type { CursorInfo, HubState, MainCommand, OrbiEvent, PanelTab, PlanTool, Settings, ViewMode } from '@shared/types';
+import type { CursorInfo, HubState, IdleLevel, MainCommand, OrbiEvent, PanelTab, PlanTool, Settings, ViewMode } from '@shared/types';
+import { canReplace, REACTIONS, type ReactionKind } from './mascot/state';
 
-/** Short-lived moods triggered by something that just happened. */
-export type ReactionKind = 'start' | 'done' | 'error' | 'waiting' | 'boop' | 'pet' | 'hello' | 'tickle';
+export type { ReactionKind } from './mascot/state';
 
 export interface Reaction {
   kind: ReactionKind;
@@ -21,6 +21,9 @@ interface AppState {
   settings: Settings;
   hub: HubState;
   docked: boolean;
+  /** Play the entrance (first window of this run). */
+  intro: boolean;
+  idle: IdleLevel;
   reaction: Reaction | null;
   toast: OrbiEvent | null;
 
@@ -29,22 +32,16 @@ interface AppState {
   setDetail: (d: DetailSlot) => void;
   setSessionIndex: (i: number) => void;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
-  react: (kind: ReactionKind, ms?: number) => void;
+  /** Plays a reaction unless a more important one is still on; events wait their turn. */
+  react: (kind: ReactionKind) => void;
 }
 
-const REACTION_MS: Record<ReactionKind, number> = {
-  start: 2200,
-  done: 3400,
-  error: 3600,
-  waiting: 2400,
-  boop: 900,
-  pet: 1600,
-  hello: 2000,
-  tickle: 1800,
-};
+/** Reactions at or above this priority are events: when blocked they wait instead of being dropped. */
+const EVENT_PRIORITY = 50;
 
 let reactionKey = 0;
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
+let queued: { kind: ReactionKind; timer: ReturnType<typeof setTimeout> } | null = null;
 
 export const useApp = create<AppState>()((set, get) => ({
   view: 'compact',
@@ -54,13 +51,17 @@ export const useApp = create<AppState>()((set, get) => ({
   settings: null as unknown as Settings,
   hub: null as unknown as HubState,
   docked: true,
+  intro: false,
+  idle: 'active',
   reaction: null,
   toast: null,
 
   setView: (view) => {
-    if (get().view === view) return;
+    const prev = get().view;
+    if (prev === view) return;
     set({ view });
     window.orbi.setView(view);
+    if (prev === 'compact' && view === 'panel') get().react('peek');
   },
   setTab: (tab) => set({ tab, view: 'panel' }),
   setDetail: (detail) => set({ detail }),
@@ -70,8 +71,18 @@ export const useApp = create<AppState>()((set, get) => ({
     const next = await window.orbi.updateSettings(patch);
     set({ settings: next });
   },
-  react: (kind, ms) => {
-    set({ reaction: { kind, key: ++reactionKey, until: Date.now() + (ms ?? REACTION_MS[kind]) } });
+  react: (kind) => {
+    const now = Date.now();
+    const current = get().reaction;
+    if (!canReplace(current, kind, now)) {
+      const spec = REACTIONS[kind];
+      if (spec.priority < EVENT_PRIORITY || !current) return;
+      if (queued && REACTIONS[queued.kind].priority > spec.priority) return;
+      if (queued) clearTimeout(queued.timer);
+      queued = { kind, timer: setTimeout(() => ((queued = null), get().react(kind)), current.until - now + 30) };
+      return;
+    }
+    set({ reaction: { kind, key: ++reactionKey, until: now + REACTIONS[kind].ms } });
   },
 }));
 
@@ -97,11 +108,18 @@ const EVENT_REACTION: Partial<Record<OrbiEvent['kind'], ReactionKind>> = {
 
 export async function boot() {
   const init = await window.orbi.initial();
-  useApp.setState({ settings: init.settings, hub: init.hub, view: init.view, docked: init.docked });
+  const intro = init.intro && !init.settings.reduceMotion;
+  useApp.setState({ settings: init.settings, hub: init.hub, view: init.view, docked: init.docked, intro });
 
   window.orbi.onHub((hub) => useApp.setState({ hub }));
   window.orbi.onSettings((settings) => useApp.setState({ settings }));
   window.orbi.onDocked((docked) => useApp.setState({ docked }));
+  window.orbi.onIdle((idle) => {
+    const s = useApp.getState();
+    if (idle === s.idle) return;
+    useApp.setState({ idle });
+    if (idle === 'active') s.react('wake');
+  });
   window.orbi.onCursor((c) => {
     cursor.x = c.x;
     cursor.y = c.y;
@@ -125,7 +143,8 @@ export async function boot() {
     else if (c.type === 'open-tab') s.setTab(c.tab);
   });
 
-  useApp.getState().react('hello');
+  // Once per run: a renderer reload (or a hot update) does not greet again.
+  if (intro) useApp.getState().react('intro');
 }
 
 export const dismissToast = () => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useApp, type ReactionKind } from '../store';
+import { useApp } from '../store';
+import { REACTIONS, resolveCondition, resolveLook, type Condition } from './state';
 
 export type Expression =
   | 'neutral'
@@ -17,6 +18,7 @@ export type Expression =
   | 'refuse';
 
 export type ActionName =
+  | 'enter'
   | 'wave'
   | 'hop'
   | 'bounce'
@@ -48,51 +50,37 @@ export interface MascotMood {
   action: MascotAction | null;
 }
 
-const REACTION_EXPRESSION: Record<ReactionKind, Expression> = {
-  start: 'curious',
-  done: 'joy',
-  error: 'surprised',
-  waiting: 'curious',
-  boop: 'happy',
-  pet: 'love',
-  hello: 'happy',
-  tickle: 'joy',
+/** Spontaneous little things, only when nothing else is going on. */
+const IDLE_POOL: Partial<Record<Condition, ActionName[]>> = {
+  idle: ['look-around', 'look-around', 'wiggle', 'wave', 'hop', 'stretch'],
+  drowsy: ['yawn', 'yawn', 'look-around'],
+  ratelimit: ['yawn', 'look-around'],
 };
-
-const REACTION_ACTION: Partial<Record<ReactionKind, ActionName>> = {
-  start: 'wiggle',
-  done: 'celebrate',
-  error: 'shake',
-  waiting: 'wave',
-  boop: 'squash',
-  pet: 'wiggle',
-  hello: 'wave',
-  tickle: 'bounce',
-};
-
-const REACTION_PARTICLES: Partial<Record<ReactionKind, Particles>> = {
-  done: 'sparkles',
-  pet: 'hearts',
-  hello: 'sparkles',
-  waiting: 'question',
-  tickle: 'sparkles',
-};
-
-/** Spontaneous little things when nothing is going on. */
-const IDLE_POOL: ActionName[] = ['look-around', 'look-around', 'wiggle', 'wave', 'hop', 'stretch'];
 
 let actionKey = 0;
 
+/** The condition (state.ts) from the hub and the user's inactivity; re-evaluated every 15 s for time-based edges. */
+export function useCondition(): Condition {
+  const permissions = useApp((s) => s.hub.permissions.length);
+  const sessions = useApp((s) => s.hub.sessions);
+  const usage = useApp((s) => s.hub.usage);
+  const idle = useApp((s) => s.idle);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(t);
+  }, []);
+  return resolveCondition({ now, permissions, sessions, usage, idle });
+}
+
 /**
- * Turns what Orbi knows (agent activity, what just happened, the pointer)
- * into one expression plus one-shot actions. Shared by 2D and 3D.
+ * Turns what Orbi knows into one look plus one-shot actions. Shared by 2D
+ * and 3D; the rules live in state.ts.
  */
 export function useMascotMood(hovered: boolean): MascotMood {
   const reaction = useApp((s) => s.reaction);
-  const permissions = useApp((s) => s.hub.permissions.length);
-  const working = useApp((s) => s.hub.sessions.some((x) => x.state === 'working' && Date.now() - x.updatedAt < 120_000));
-  const lastError = useApp((s) => s.hub.sessions.some((x) => x.state === 'error' && Date.now() - x.updatedAt < 60_000));
   const reduceMotion = useApp((s) => s.settings.reduceMotion);
+  const condition = useCondition();
 
   const [action, setAction] = useState<MascotAction | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -100,24 +88,23 @@ export function useMascotMood(hovered: boolean): MascotMood {
   // Reaction → one-shot action, and re-render when the reaction expires.
   useEffect(() => {
     if (!reaction) return;
-    const a = REACTION_ACTION[reaction.kind];
+    const a = REACTIONS[reaction.kind].action;
     if (a) setAction({ name: a, key: ++actionKey });
     const t = setTimeout(() => setNow(Date.now()), Math.max(0, reaction.until - Date.now()) + 20);
     return () => clearTimeout(t);
   }, [reaction]);
 
-  const permissionsRef = useRef(permissions);
-  permissionsRef.current = permissions;
+  const conditionRef = useRef(condition);
+  conditionRef.current = condition;
   useEffect(() => {
     if (reduceMotion) return;
     let t: ReturnType<typeof setTimeout>;
     const schedule = () => {
       t = setTimeout(
         () => {
+          const pool = IDLE_POOL[conditionRef.current];
           const r = useApp.getState().reaction;
-          if (permissionsRef.current === 0 && (!r || r.until < Date.now())) {
-            setAction({ name: IDLE_POOL[Math.floor(Math.random() * IDLE_POOL.length)], key: ++actionKey });
-          }
+          if (pool && (!r || r.until < Date.now())) setAction({ name: pool[Math.floor(Math.random() * pool.length)], key: ++actionKey });
           schedule();
         },
         7000 + Math.random() * 9000,
@@ -127,35 +114,6 @@ export function useMascotMood(hovered: boolean): MascotMood {
     return () => clearTimeout(t);
   }, [reduceMotion]);
 
-  const active = reaction && reaction.until > now ? reaction : null;
-
-  let expression: Expression;
-  let particles: Particles = null;
-  if (active) {
-    expression = REACTION_EXPRESSION[active.kind];
-    particles = REACTION_PARTICLES[active.kind] ?? null;
-  } else if (permissions > 0) expression = 'worried';
-  else if (lastError) expression = 'sad';
-  else if (working) expression = hovered ? 'curious' : 'focused';
-  else if (hovered) expression = 'curious';
-  else expression = 'neutral';
-
-  const badge: Badge =
-    permissions > 0 ? 'alert' : active?.kind === 'done' ? 'done' : active?.kind === 'error' || (lastError && !active) ? 'error' : null;
-
-  const glow: Glow =
-    permissions > 0
-      ? 'amber'
-      : active?.kind === 'done'
-        ? 'green'
-        : active?.kind === 'error'
-          ? 'red'
-          : active?.kind === 'pet'
-            ? 'violet'
-            : working
-              ? 'teal'
-              : null;
-
-  // Sleep comes back with the inactivity-driven state machine (phase 1).
-  return { expression, badge, glow, particles, working, sleeping: false, action };
+  const active = reaction && reaction.until > now ? reaction.kind : null;
+  return { ...resolveLook(condition, active, hovered), action };
 }

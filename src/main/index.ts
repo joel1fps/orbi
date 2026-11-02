@@ -1,6 +1,6 @@
-import { app, globalShortcut, ipcMain, Menu, nativeImage, shell, Tray } from 'electron';
+import { app, globalShortcut, ipcMain, Menu, nativeImage, powerMonitor, shell, Tray } from 'electron';
 import { spawn } from 'node:child_process';
-import type { MainCommand, PermissionDecision, Settings, SimulationKind, ViewMode } from '@shared/types';
+import type { IdleLevel, MainCommand, PermissionDecision, Settings, SimulationKind, ViewMode } from '@shared/types';
 import { connectAntigravity, disconnectAntigravity, refreshAntigravityHookStatus, upgradeAntigravityConnection } from './bridge/antigravitySetup';
 import { isBridgeCli, prepareBridgeCli, runBridgeCli } from './bridge/cli';
 import { connectClaude, disconnectClaude, prepareBridge, refreshClaudeStatus, upgradeClaudeConnection } from './bridge/claudeSetup';
@@ -29,6 +29,7 @@ import {
   hideWidget,
   send,
   setAlwaysOnTop,
+  setCursorTracking,
   setInteractive,
   setView,
   showWidget,
@@ -122,6 +123,7 @@ function applySettings(patch: Partial<Omit<Settings, 'githubTokenSet'>>): Settin
     }
   }
   if ('customTools' in patch) hub.changed();
+  if ('followCursor' in patch || 'reduceMotion' in patch) syncCursorTracking();
   tray?.setContextMenu(buildTrayMenu());
   send('orbi:settings', next);
   return next;
@@ -155,12 +157,50 @@ function launch(target: string) {
   child.unref();
 }
 
+let introPending = true;
+function takeIntro(): boolean {
+  const v = introPending;
+  introPending = false;
+  return v;
+}
+
+/**
+ * How long nobody has touched the keyboard or mouse: drowsy after 5 min,
+ * asleep after 15. Checked every 30 s, every 5 s while away so Orbi wakes
+ * up right when the user is back. Asleep, nobody moves the cursor, so its
+ * sampling stops too.
+ */
+const DROWSY_S = 5 * 60;
+const ASLEEP_S = 15 * 60;
+let idleLevel: IdleLevel = 'active';
+
+function startIdleWatch() {
+  const check = () => {
+    const s = powerMonitor.getSystemIdleTime();
+    const next: IdleLevel = s >= ASLEEP_S ? 'asleep' : s >= DROWSY_S ? 'drowsy' : 'active';
+    if (next !== idleLevel) {
+      idleLevel = next;
+      send('orbi:idle', next);
+      syncCursorTracking();
+    }
+    setTimeout(check, idleLevel === 'active' ? 30_000 : 5_000).unref();
+  };
+  check();
+}
+
+function syncCursorTracking() {
+  const s = store.settings;
+  setCursorTracking(s.followCursor && !s.reduceMotion && idleLevel !== 'asleep');
+}
+
 function registerIpc() {
   ipcMain.handle('orbi:initial', () => ({
     settings: store.settings,
     hub: hub.snapshot(),
     view: getView(),
     docked: store.window.docked,
+    // The entrance plays for the first window of this run only, not on a renderer reload.
+    intro: takeIntro(),
   }));
   ipcMain.on('widget:interactive', (_e, on: boolean) => setInteractive(Boolean(on)));
   ipcMain.on('widget:drag-start', () => dragStart());
@@ -212,6 +252,7 @@ app.whenReady().then(async () => {
   hub.restoreUsage(store.usage);
   registerIpc();
   createWidget();
+  syncCursorTracking();
   createTray();
 
   const port = await startBridgeServer(store.bridgeToken);
@@ -237,6 +278,7 @@ app.whenReady().then(async () => {
 
   hub.onPermissionsChanged(syncPermissionShortcuts);
   startDebugServer();
+  startIdleWatch();
   globalShortcut.register('Control+Alt+O', () => command({ type: 'toggle-panel' }));
 });
 
