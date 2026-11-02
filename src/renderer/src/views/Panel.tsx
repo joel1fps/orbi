@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
 import { ago, BUILTIN_TOOLS, isBuiltin, until } from '@shared/tools';
 import type { AgentSession, CiState, PlanUsage, ToolStatus } from '@shared/types';
 import { SimTag, ToolFace } from '../components/ui';
@@ -7,6 +7,7 @@ import { headlineWindow, isStale, levelTone, liveWindow, PLAN_NAME, PLAN_TONE, P
 import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
 import { PermissionCard } from './PermissionCard';
+import { ArsenalSheet } from './Arsenal';
 import { SettingsSheet } from './Settings';
 import { ToolsSheet } from './Tools';
 
@@ -15,7 +16,7 @@ export function Panel() {
   return (
     <div className={tab === 'home' ? 'panel' : 'sheet'}>
       <PanelHead />
-      {tab === 'home' ? <Home /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
+      {tab === 'home' ? <Home /> : tab === 'arsenal' ? <ArsenalSheet /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
     </div>
   );
 }
@@ -29,6 +30,9 @@ function PanelHead() {
     <div className="panel__head">
       <button className="tab" aria-pressed={tab === 'home'} aria-label="Início" title="Início" onClick={() => setTab('home')}>
         <House size={15} />
+      </button>
+      <button className="tab" aria-pressed={tab === 'arsenal'} aria-label="Arsenal de Skills" title="Arsenal de Skills" onClick={() => setTab('arsenal')}>
+        <Swords size={15} />
       </button>
       <button className="tab" aria-pressed={tab === 'tools'} aria-label="Ferramentas" title="Ferramentas" onClick={() => setTab('tools')}>
         <LayoutGrid size={15} />

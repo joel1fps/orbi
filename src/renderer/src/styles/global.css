@@ -925,6 +925,146 @@ button {
   color: var(--muted);
 }
 
+/* ---------- skills arsenal ---------- */
+
+.arsenal__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.arsenal__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.arsenal__cats .chip {
+  height: 26px;
+  padding: 0 10px;
+}
+.arsenal__item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms var(--ease);
+}
+.arsenal__item:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+.arsenal__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+}
+.arsenal__meta {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--faint);
+}
+.arsenal__tag {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(79, 183, 162, 0.14);
+  color: var(--teal-light);
+  font-size: 10.5px;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+.arsenal__tag--warn {
+  background: rgba(242, 184, 75, 0.14);
+  color: var(--amber);
+}
+.arsenal__tag--dim {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--faint);
+}
+.arsenal__path {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  word-break: break-all;
+}
+.arsenal__back {
+  margin-bottom: 6px;
+}
+.arsenal__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 4px 6px;
+}
+.arsenal__name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+.arsenal__text {
+  margin: 0 4px 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.arsenal__hint {
+  margin-top: 10px;
+  color: var(--faint);
+}
+.arsenal__target {
+  cursor: pointer;
+}
+.arsenal__target input[type='checkbox'] {
+  accent-color: var(--teal);
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+.arsenal__warn {
+  color: var(--amber);
+}
+.arsenal__warn .row__sub {
+  color: var(--amber);
+}
+.arsenal__error {
+  color: var(--red);
+}
+.arsenal__files {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 4px 12px 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.arsenal__file {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1px 0;
+}
+.arsenal__file--script {
+  color: var(--amber);
+}
+.arsenal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.arsenal__empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
 /* ---------- permission ---------- */
 
 .perm {

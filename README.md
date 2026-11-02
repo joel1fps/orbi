@@ -45,6 +45,31 @@ Arraste a ilha para qualquer lugar. Solte perto do topo da tela para ela encaixa
 
 As preferências ficam salvas em `%APPDATA%\Orbi\orbi-state.json`. A versão 0.1 tinha um Tamagotchi (fome, energia e humor); ao abrir a versão nova, esses dados são descartados e o arquivo antigo fica guardado uma vez em `orbi-state.v1-backup.json`.
 
+## Arsenal de Skills
+
+Aba com as espadas no painel (ou "Arsenal de Skills" na bandeja). Mostra um catálogo curado de skills no formato aberto *Agent Skills* (uma pasta com um `SKILL.md`), com busca, categorias, origem, licença e versão, e as skills já presentes nas pastas dos agentes, instaladas pelo Orbi ou não.
+
+Instalar: escolher a skill → marcar os agentes → **Conferir** (o que será gravado, onde, e o que já existe) → **Confirmar** → resultado.
+
+| Agente | Pasta (global) |
+| --- | --- |
+| Claude Code | `~/.claude/skills` |
+| Codex | `~/.agents/skills` |
+| Gemini CLI | `~/.gemini/skills` |
+| Antigravity | `~/.gemini/config/skills` |
+| Cursor | `~/.cursor/skills` (o Cursor também lê as pastas do Claude Code e do Codex; o Orbi avisa quando a skill ficaria duplicada) |
+
+Segurança:
+
+- O catálogo (`resources/skills-index.json`) fixa cada skill num commit e guarda o tamanho e o sha256 de cada arquivo. Um arquivo baixado que não bate não é gravado. Só entram skills Apache-2.0 ou MIT.
+- Caminhos são validados (nada de `..`, caminhos absolutos, links ou nomes reservados do Windows), com limite de 200 arquivos e 5 MB.
+- O Orbi nunca executa nada de uma skill. Skills com scripts exigem uma segunda confirmação explícita.
+- Uma pasta que não foi o Orbi que instalou, ou que você editou depois, nunca é substituída sem você marcar "Substituir"; a versão anterior vai para `%APPDATA%\Orbi\skill-backups`.
+- Cada instalação fica registrada em `%APPDATA%\Orbi\skills-ledger.json`. Remover apaga só os arquivos ainda idênticos ao que o Orbi gravou; o que você editou ou criou fica.
+- Todo acesso a disco e rede acontece no processo principal; a interface só envia identificadores.
+
+Para atualizar o catálogo (mantenedores): `node scripts/build-skills-index.mjs` fixa o commit atual de cada fonte e recalcula os hashes; revise o diff antes de publicar. Uma skill nova entra pela lista `SOURCES` do script.
+
 ## Integrações e de onde vêm os dados
 
 Nada é estimado ou inventado. Sem fonte de dados, aparece "não instalado", "não conectado" ou nenhum número.

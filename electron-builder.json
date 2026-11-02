@@ -16,7 +16,8 @@
       "to": ".",
       "filter": [
         "icon.png",
-        "tray*.png"
+        "tray*.png",
+        "skills-index.json"
       ]
     }
   ],

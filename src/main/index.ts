@@ -1,5 +1,7 @@
 import { app, globalShortcut, ipcMain, Menu, nativeImage, powerMonitor, shell, Tray } from 'electron';
 import { spawn } from 'node:child_process';
+import { existsSync, statSync } from 'node:fs';
+import { isAbsolute } from 'node:path';
 import type { IdleLevel, MainCommand, PermissionDecision, Settings, SimulationKind, ViewMode } from '@shared/types';
 import { connectAntigravity, disconnectAntigravity, refreshAntigravityHookStatus, upgradeAntigravityConnection } from './bridge/antigravitySetup';
 import { isBridgeCli, prepareBridgeCli, runBridgeCli } from './bridge/cli';
@@ -17,6 +19,7 @@ import { refreshGithub, startGithub } from './integrations/github';
 import { startDebugServer } from './debug';
 import { resource } from './resources';
 import { simulate } from './simulator';
+import { applyPlan, openSkillFolder, planInstall, skillsCatalog, uninstallSkill } from './skills/manager';
 import { flush, loadStore, store } from './store';
 import {
   createWidget,
@@ -63,6 +66,7 @@ function buildTrayMenu() {
   const s = store.settings;
   return Menu.buildFromTemplate([
     { label: 'Abrir painel', click: () => command({ type: 'set-view', view: 'panel' }) },
+    { label: 'Arsenal de Skills', click: () => command({ type: 'open-tab', tab: 'arsenal' }) },
     { label: 'Modo compacto', click: () => command({ type: 'set-view', view: 'compact' }) },
     { type: 'separator' },
     {
@@ -238,7 +242,17 @@ function registerIpc() {
   ipcMain.on('open:external', (_e, url: string) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
   });
-  ipcMain.on('open:path', (_e, path: string) => void shell.openPath(path));
+  // Explorer on an existing folder only: openPath would also run an executable.
+  ipcMain.on('open:path', (_e, path: unknown) => {
+    if (typeof path === 'string' && isAbsolute(path) && existsSync(path) && statSync(path).isDirectory()) void shell.openPath(path);
+  });
+  ipcMain.handle('skills:catalog', () => skillsCatalog());
+  ipcMain.handle('skills:plan', (_e, skillId: unknown, targets: unknown) => planInstall(String(skillId), Array.isArray(targets) ? targets : []));
+  ipcMain.handle('skills:apply', (_e, planId: unknown, opts: { replace?: unknown; allowScripts?: unknown } | undefined) =>
+    applyPlan(String(planId), { replace: opts?.replace === true, allowScripts: opts?.allowScripts === true }),
+  );
+  ipcMain.handle('skills:uninstall', (_e, skillId: unknown, targetId: unknown) => uninstallSkill(String(skillId), targetId));
+  ipcMain.on('skills:open', (_e, targetId: unknown, name: unknown) => openSkillFolder(targetId, name));
   ipcMain.on('tool:launch', (_e, id: string) => {
     const t = store.settings.customTools.find((c) => `custom:${c.id}` === id);
     if (t) launch(t.target);

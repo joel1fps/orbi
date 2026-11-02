@@ -9,6 +9,10 @@ import type {
   PermissionDecision,
   Settings,
   SimulationKind,
+  SkillActionResult,
+  SkillCatalog,
+  SkillPlan,
+  SkillTargetId,
   ViewMode,
 } from '@shared/types';
 
@@ -51,6 +55,12 @@ const api = {
   openExternal: (url: string) => ipcRenderer.send('open:external', url),
   openPath: (p: string) => ipcRenderer.send('open:path', p),
   launchTool: (id: string) => ipcRenderer.send('tool:launch', id),
+  skillsCatalog: (): Promise<SkillCatalog> => ipcRenderer.invoke('skills:catalog'),
+  skillsPlan: (skillId: string, targets: SkillTargetId[]): Promise<SkillPlan | { error: string }> => ipcRenderer.invoke('skills:plan', skillId, targets),
+  skillsApply: (planId: string, opts: { replace: boolean; allowScripts: boolean }): Promise<SkillActionResult> =>
+    ipcRenderer.invoke('skills:apply', planId, opts),
+  skillsUninstall: (skillId: string, targetId: SkillTargetId): Promise<SkillActionResult> => ipcRenderer.invoke('skills:uninstall', skillId, targetId),
+  skillsOpen: (targetId: SkillTargetId, name?: string) => ipcRenderer.send('skills:open', targetId, name),
   quit: () => ipcRenderer.send('app:quit'),
 };
 

@@ -1,5 +1,5 @@
 export type ViewMode = 'compact' | 'panel';
-export type PanelTab = 'home' | 'tools' | 'settings';
+export type PanelTab = 'home' | 'arsenal' | 'tools' | 'settings';
 export type MascotStyle = '2d' | '3d';
 
 export type BuiltinToolId = 'claude' | 'codex' | 'antigravity' | 'gemini' | 'hermes' | 'github';
@@ -203,3 +203,80 @@ export interface CursorInfo {
 
 /** How long the user has been away from the computer (no keyboard or mouse). */
 export type IdleLevel = 'active' | 'drowsy' | 'asleep';
+
+// ---------- Skills Arsenal ----------
+
+export type SkillTargetId = 'claude' | 'codex' | 'gemini' | 'antigravity' | 'cursor';
+
+/** Per agent: installed by Orbi (current or outdated), or a folder with that name Orbi did not install. */
+export type SkillInstallState = 'installed' | 'update' | 'external';
+
+export interface SkillCatalogEntry {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  license: string;
+  version?: string;
+  source: { label: string; repo: string; commit: string; url: string };
+  hasScripts: boolean;
+  files: { path: string; size: number; script: boolean }[];
+  installs: Partial<Record<SkillTargetId, SkillInstallState>>;
+}
+
+export interface SkillTargetInfo {
+  id: SkillTargetId;
+  name: string;
+  /** Absolute folder Orbi installs into. */
+  dir: string;
+  detected: boolean;
+  alsoVisibleTo: SkillTargetId[];
+  docs: string;
+}
+
+/** A skill found in an agent's folder, installed by Orbi or not. */
+export interface InstalledSkill {
+  name: string;
+  description?: string;
+  targetId: SkillTargetId;
+  managed: boolean;
+  skillId?: string;
+  commit?: string;
+  installedAt?: number;
+}
+
+export interface SkillCatalog {
+  skills: SkillCatalogEntry[];
+  targets: SkillTargetInfo[];
+  installed: InstalledSkill[];
+  /** Why the catalog could not be read, if it could not. */
+  error?: string;
+}
+
+export interface SkillPlanTarget {
+  targetId: SkillTargetId;
+  dir: string;
+  status: 'new' | 'same' | 'update' | 'modified' | 'conflict';
+  alsoVisibleTo: SkillTargetId[];
+  /** Another pick already gives this agent the skill through a shared folder. */
+  redundant: boolean;
+}
+
+export interface SkillPlan {
+  id: string;
+  skillId: string;
+  name: string;
+  source: SkillCatalogEntry['source'];
+  license: string;
+  files: SkillCatalogEntry['files'];
+  totalBytes: number;
+  hasScripts: boolean;
+  targets: SkillPlanTarget[];
+  errors: string[];
+}
+
+export interface SkillActionResult {
+  ok: boolean;
+  message: string;
+  details: { targetId: SkillTargetId; ok: boolean; message: string }[];
+}
