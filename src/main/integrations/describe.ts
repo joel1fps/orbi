@@ -1,4 +1,5 @@
 import { basename, truncate } from '@shared/tools';
+export { cleanAntigravityArg, describeAntigravityTool } from './antigravityTranscript';
 
 /** Human label + optional monospace payload for a Claude Code tool call. */
 export function describeClaudeTool(name: string, input: unknown): { label: string; code?: string } {

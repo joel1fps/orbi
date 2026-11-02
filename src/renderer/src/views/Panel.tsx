@@ -55,7 +55,11 @@ function UsagePills() {
   const detail = useApp((s) => s.detail);
   const setDetail = useApp((s) => s.setDetail);
   const now = useNow();
-  const shown = PLAN_TOOLS.filter((t) => usage.some((u) => u.tool === t) || tools.find((x) => x.id === t)?.availability !== 'not-installed');
+  const shown = PLAN_TOOLS.filter((t) =>
+    t === 'antigravity'
+      ? usage.some((u) => u.tool === t)
+      : usage.some((u) => u.tool === t) || tools.find((x) => x.id === t)?.availability !== 'not-installed',
+  );
   return (
     <>
       {shown.map((t) => {
@@ -128,7 +132,7 @@ function SessionDetail() {
         <div className="hero__info">
           <div className="hero__now">Nenhum agente trabalhando agora</div>
           <div className="hero__summary">
-            O Orbi acompanha o Claude Code e o Codex neste computador e reage quando uma tarefa começa, termina ou precisa de você.
+            O Orbi acompanha o Claude Code, o Codex e o Antigravity neste computador e reage quando uma tarefa começa, termina ou precisa de você.
           </div>
           {pet.satiety < 30 || pet.energy < 25 ? (
             <div className="hero__step">

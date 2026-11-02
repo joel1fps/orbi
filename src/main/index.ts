@@ -1,6 +1,7 @@
 import { app, globalShortcut, ipcMain, Menu, nativeImage, shell, Tray } from 'electron';
 import { spawn } from 'node:child_process';
 import type { MainCommand, PermissionDecision, PetState, Settings, SimulationKind, ViewMode } from '@shared/types';
+import { connectAntigravity, disconnectAntigravity, refreshAntigravityHookStatus, upgradeAntigravityConnection } from './bridge/antigravitySetup';
 import { isBridgeCli, prepareBridgeCli, runBridgeCli } from './bridge/cli';
 import { connectClaude, disconnectClaude, prepareBridge, refreshClaudeStatus, upgradeClaudeConnection } from './bridge/claudeSetup';
 import { startBridgeServer, stopBridgeServer } from './bridge/server';
@@ -33,7 +34,7 @@ import {
   showWidget,
 } from './widget';
 
-// Claude Code runs `Orbi --orbi-hook` for each hook: forward the event and exit, no UI.
+// Claude Code / Antigravity run `Orbi --orbi-hook` / `--orbi-agy-hook=<Event>`: forward and exit, no UI.
 const bridgeCli = isBridgeCli();
 if (bridgeCli) {
   prepareBridgeCli();
@@ -187,6 +188,8 @@ function registerIpc() {
   ipcMain.handle('claude:login', () => loginClaudeAccount());
   ipcMain.handle('codex:connect', () => connectCodex());
   ipcMain.handle('antigravity:open', () => openAntigravity());
+  ipcMain.handle('antigravity:connect', () => connectAntigravity());
+  ipcMain.handle('antigravity:disconnect', () => disconnectAntigravity());
   ipcMain.handle('claude:disconnect', () => disconnectClaude());
   ipcMain.handle('github:token', async (_e, token: string | null) => {
     const ok = store.setGithubToken(token?.trim() || null);
@@ -216,10 +219,15 @@ app.whenReady().then(async () => {
 
   const port = await startBridgeServer(store.bridgeToken);
   if (port) prepareBridge(port);
-  // Keep an existing Claude Code connection valid after updates (old format, moved executable).
+  // Keep existing Claude Code and Antigravity connections valid after updates (old format, moved executable).
   upgradeClaudeConnection();
+  upgradeAntigravityConnection();
   refreshClaudeStatus();
-  setInterval(refreshClaudeStatus, 30_000).unref();
+  refreshAntigravityHookStatus();
+  setInterval(() => {
+    refreshClaudeStatus();
+    refreshAntigravityHookStatus();
+  }, 30_000).unref();
 
   startDetection();
   startClaudeWatchers();

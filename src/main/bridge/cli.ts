@@ -3,15 +3,19 @@ import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } f
 import { homedir, tmpdir } from 'node:os';
 import { request } from 'node:http';
 import { join } from 'node:path';
+import { AGY_HOOK_PREFIX, stripAntigravityOrbi, type AntigravityHooksDoc } from './antigravityHookSettings';
 import { DISCONNECT_FLAG, HOOK_FLAG, stripOrbi, type ClaudeSettings } from './hookSettings';
 
 /**
- * Claude Code runs `Orbi --orbi-hook` for each hook event (exec form, no
- * shell, no Node.js needed). This mode never opens a window: it forwards the
- * event to the running Orbi over 127.0.0.1 and exits. If Orbi isn't running
- * it exits 0 silently, so Claude Code behaves exactly as without Orbi.
+ * Claude Code runs `Orbi --orbi-hook` and Antigravity runs
+ * `Orbi --orbi-agy-hook=<Event>` for each hook event. This mode never opens a
+ * window: it forwards the event to the running Orbi over 127.0.0.1 and exits.
+ * If Orbi isn't running it exits 0 silently (returning valid no-op JSON when
+ * Antigravity expects stdout JSON), so both agents behave as without Orbi.
  */
-export const isBridgeCli = () => process.argv.includes(HOOK_FLAG) || process.argv.includes(DISCONNECT_FLAG);
+const agyHookArg = () => process.argv.find((a) => a.startsWith(AGY_HOOK_PREFIX));
+
+export const isBridgeCli = () => process.argv.includes(HOOK_FLAG) || process.argv.includes(DISCONNECT_FLAG) || Boolean(agyHookArg());
 
 /** Where the running Orbi keeps the bridge port/token (resolved before we move userData). */
 let bridgeConfigPath = '';
@@ -34,7 +38,7 @@ const trace = (msg: string) => {
 
 /**
  * Electron's main process is a GUI app on Windows: `process.stdin` stays
- * empty there, so read file descriptor 0 (the pipe Claude Code gives us)
+ * empty there, so read file descriptor 0 (the pipe the agent gives us)
  * directly, and fall back to the stream elsewhere.
  */
 function readStdin(): Promise<string> {
@@ -55,13 +59,13 @@ function readStdin(): Promise<string> {
 
 function done(output?: string): never {
   if (output) process.stdout.write(output);
-  // Flush stdout before leaving (Claude Code reads the permission decision from it).
+  // Flush stdout before leaving (Claude Code / Antigravity read hook JSON from it).
   process.stdout.end(() => app.exit(0));
   setTimeout(() => app.exit(0), 300).unref();
   return undefined as never;
 }
 
-/** `Orbi --orbi-disconnect`: strip Orbi's hooks from Claude Code's settings (used on uninstall). */
+/** `Orbi --orbi-disconnect`: strip Orbi's hooks from Claude Code and Antigravity (used on uninstall). */
 function disconnect(): never {
   try {
     const path = join(process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude'), 'settings.json');
@@ -76,14 +80,75 @@ function disconnect(): never {
       }
     }
   } catch (err) {
-    trace(`disconnect failed: ${String(err)}`);
+    trace(`claude disconnect failed: ${String(err)}`);
   }
+
+  try {
+    const agyPath = join(homedir(), '.gemini', 'config', 'hooks.json');
+    if (existsSync(agyPath)) {
+      const raw = readFileSync(agyPath, 'utf8');
+      const doc = raw.trim() ? (JSON.parse(raw) as AntigravityHooksDoc) : {};
+      const clean = stripAntigravityOrbi(doc);
+      if (JSON.stringify(clean) !== JSON.stringify(doc)) {
+        writeFileSync(`${agyPath}.orbi-backup-uninstall`, raw);
+        writeFileSync(`${agyPath}.orbi-tmp`, JSON.stringify(clean, null, 2) + '\n');
+        renameSync(`${agyPath}.orbi-tmp`, agyPath);
+      }
+    }
+  } catch (err) {
+    trace(`antigravity disconnect failed: ${String(err)}`);
+  }
+
   return done();
 }
 
 export async function runBridgeCli(): Promise<void> {
   if (process.argv.includes(DISCONNECT_FLAG)) return disconnect();
   trace(`start argv=${JSON.stringify(process.argv)}`);
+
+  const rawAgy = agyHookArg();
+  if (rawAgy) {
+    const agyEvent = rawAgy.slice(AGY_HOOK_PREFIX.length);
+    const fallback = agyEvent === 'Stop' ? '{"decision":"stop"}' : '{}';
+    const input = await readStdin();
+    let cfg: { port: number; token: string };
+    try {
+      cfg = JSON.parse(readFileSync(bridgeConfigPath, 'utf8'));
+    } catch {
+      return done(fallback);
+    }
+    const req = request(
+      {
+        host: '127.0.0.1',
+        port: cfg.port,
+        path: '/agy-hook',
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-orbi-token': cfg.token,
+          'x-orbi-event': agyEvent,
+        },
+        timeout: 3000,
+      },
+      (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (c) => (body += c));
+        res.on('end', () => {
+          const out = body.trim();
+          done(res.statusCode === 200 && out.startsWith('{') ? out : fallback);
+        });
+      },
+    );
+    req.on('error', () => done(fallback));
+    req.on('timeout', () => {
+      req.destroy();
+      done(fallback);
+    });
+    req.end(input || '{}');
+    return;
+  }
+
   const input = await readStdin();
   trace(`stdin ${input.length} bytes`);
   let event = '';

@@ -14,7 +14,9 @@ export function ToolsSheet() {
     <div className="sheet__body">
       <div className="group-title">Agentes de IA</div>
       <div className="rows">
-        {agents.map((t) => (t.id === 'claude' ? <ClaudeRow key={t.id} t={t} /> : <AgentRow key={t.id} t={t} />))}
+        {agents.map((t) =>
+          t.id === 'claude' ? <ClaudeRow key={t.id} t={t} /> : t.id === 'antigravity' ? <AntigravityRow key={t.id} t={t} /> : <AgentRow key={t.id} t={t} />,
+        )}
       </div>
 
       <div className="group-title">GitHub</div>
@@ -103,6 +105,57 @@ function ClaudeRow({ t }: { t: ToolStatus }) {
         </div>
       </div>
       <AccountUsageRow />
+    </>
+  );
+}
+
+function AntigravityRow({ t }: { t: ToolStatus }) {
+  const agy = useApp((s) => s.hub.antigravity);
+  const serverOk = useApp((s) => s.hub.claude.serverOk);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const connected = agy.hooksInstalled;
+
+  const toggle = async () => {
+    setBusy(true);
+    const r = connected ? await window.orbi.antigravityDisconnect() : await window.orbi.antigravityConnect();
+    setMsg(r.message);
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <div className="row">
+        <ToolFace color={t.color} size={26} dim={t.availability === 'not-installed'} />
+        <div className="row__main">
+          <ToolTitle t={t} />
+          <div className="row__sub" title={t.source}>
+            {t.detail}
+            {agy.lastHookAt ? `. Último evento ${ago(agy.lastHookAt)}` : ''}
+          </div>
+        </div>
+        {t.availability !== 'not-installed' ? (
+          <button className={`btn${connected ? ' btn--ghost' : ' btn--light'}`} disabled={busy || !serverOk} onClick={() => void toggle()}>
+            {connected ? 'Desconectar' : 'Conectar'}
+          </button>
+        ) : t.installHint ? (
+          <button className="btn btn--ghost" onClick={() => window.orbi.openExternal(t.installHint!.url)}>
+            {t.installHint.label} <ExternalLink size={12} />
+          </button>
+        ) : null}
+      </div>
+      {t.availability !== 'not-installed' ? (
+        <div className="row">
+          <div className="row__main">
+            <div className="row__note">
+              {connected
+                ? 'Conectado globalmente: o Orbi recebe início, pasta do projeto e conclusão de todos os workspaces do Antigravity (IDE, App 2.0 e CLI agy) e atualiza cada passo pelas transcrições locais.'
+                : 'Sem conexão, o Orbi já acompanha e atualiza os passos pelas transcrições em ~/.gemini/antigravity. Conectar adiciona hooks globais em ~/.gemini/config/hooks.json (com backup) para início, projeto e conclusão instantâneos em qualquer pasta.'}
+            </div>
+            {msg ? <div className="row__note" style={{ color: '#7ed5c3', marginTop: 4 }}>{msg}</div> : null}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

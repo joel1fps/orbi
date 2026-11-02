@@ -22,20 +22,49 @@ export function whichCommand(cmd: string): Promise<string | null> {
 interface Probe {
   id: ToolId;
   commands: string[];
+  /** Known executable paths outside PATH (e.g. ~/.gemini/bin/agy.exe for GUI apps). */
+  extraBins?: { name: string; path: string }[];
   dataDir?: string;
+  dataDirs?: string[];
   /** Directory whose newest write counts as "activity". */
   activityDir?: string;
+  activityDirs?: string[];
   depth?: number;
 }
+
+const agyBin = join(home, '.gemini', 'bin', process.platform === 'win32' ? 'agy.exe' : 'agy');
+const agyAppBins =
+  process.platform === 'win32'
+    ? [
+        { name: 'agy', path: agyBin },
+        { name: 'antigravity', path: join(process.env.LOCALAPPDATA ?? '', 'Programs', 'Antigravity IDE', 'Antigravity IDE.exe') },
+      ]
+    : process.platform === 'darwin'
+      ? [
+          { name: 'agy', path: agyBin },
+          { name: 'antigravity', path: '/Applications/Antigravity.app' },
+        ]
+      : [{ name: 'agy', path: agyBin }];
 
 const PROBES: Probe[] = [
   { id: 'claude', commands: ['claude'], dataDir: join(home, '.claude', 'projects'), activityDir: join(home, '.claude', 'projects'), depth: 1 },
   { id: 'codex', commands: ['codex'], dataDir: join(home, '.codex', 'sessions'), activityDir: join(home, '.codex', 'sessions'), depth: 3 },
   {
     id: 'antigravity',
-    commands: [],
-    dataDir: join(home, '.gemini', 'antigravity-ide'),
-    activityDir: join(home, '.gemini', 'antigravity-ide', 'conversations'),
+    commands: ['agy', 'antigravity'],
+    extraBins: agyAppBins,
+    // Antigravity 2.0 uses ~/.gemini/antigravity (and ~/.gemini/antigravity-cli);
+    // legacy 1.x used ~/.gemini/antigravity-ide/conversations (an empty migrated dir only has .ide_migration).
+    dataDirs: [
+      join(home, '.gemini', 'antigravity'),
+      join(home, '.gemini', 'antigravity-cli'),
+      join(home, '.gemini', 'antigravity-ide', 'conversations'),
+    ],
+    activityDirs: [
+      join(home, '.gemini', 'antigravity', 'conversations'),
+      join(home, '.gemini', 'antigravity-cli', 'conversations'),
+      join(home, '.gemini', 'antigravity-ide', 'conversations'),
+    ],
     depth: 1,
   },
   // ~/.gemini also exists for Antigravity, so only the CLI's own tmp/ counts as Gemini CLI data.
@@ -56,8 +85,31 @@ async function probe(p: Probe) {
       break;
     }
   }
-  const hasData = p.dataDir ? await exists(p.dataDir) : false;
-  const lastWrite = p.activityDir && hasData ? await newestWrite(p.activityDir, p.depth ?? 2) : undefined;
+  if (!onPath && p.extraBins) {
+    for (const b of p.extraBins) {
+      if (b.path && (await exists(b.path))) {
+        commandPaths[b.name] = b.path;
+        onPath = true;
+        break;
+      }
+    }
+  }
+  const dataDirs = p.dataDirs ?? (p.dataDir ? [p.dataDir] : []);
+  let hasData = false;
+  for (const d of dataDirs) {
+    if (await exists(d)) {
+      hasData = true;
+      break;
+    }
+  }
+  const activityDirs = p.activityDirs ?? (p.activityDir ? [p.activityDir] : []);
+  let lastWrite: number | undefined;
+  if (hasData && activityDirs.length > 0) {
+    for (const d of activityDirs) {
+      const w = await newestWrite(d, p.depth ?? 2);
+      if (w && (!lastWrite || w > lastWrite)) lastWrite = w;
+    }
+  }
   hub.setDetection(p.id, { onPath, hasData, lastWrite });
 }
 

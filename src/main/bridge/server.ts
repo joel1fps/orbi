@@ -1,12 +1,14 @@
 import { createServer, type Server } from 'node:http';
 import { timingSafeEqual } from 'node:crypto';
+import { handleAntigravityHook, type AntigravityHookPayload } from '../integrations/antigravity';
 import { handleHook, handlePermissionHook, type HookPayload } from '../integrations/claude';
 import { hub } from '../hub';
+import { isAgyHookEvent } from './antigravityHookSettings';
 
 /**
- * Local endpoint the Claude Code hook script talks to. Bound to 127.0.0.1
- * only and guarded by a random token, so web pages and other users can't
- * post fake events or answer permission prompts.
+ * Local endpoint the Claude Code and Antigravity hook bridges talk to. Bound to
+ * 127.0.0.1 only and guarded by a random token, so web pages and other users
+ * can't post fake events or answer permission prompts.
  */
 const BASE_PORT = 47821;
 let server: Server | null = null;
@@ -26,7 +28,7 @@ export function startBridgeServer(token: string): Promise<number> {
         res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true,"app":"orbi"}');
         return;
       }
-      if (req.method !== 'POST' || req.url !== '/hook') {
+      if (req.method !== 'POST' || (req.url !== '/hook' && req.url !== '/agy-hook')) {
         res.writeHead(404).end();
         return;
       }
@@ -41,6 +43,23 @@ export function startBridgeServer(token: string): Promise<number> {
         if (body.length > 2_000_000) req.destroy();
       });
       req.on('end', async () => {
+        if (req.url === '/agy-hook') {
+          const eventHeader = String(req.headers['x-orbi-event'] ?? '');
+          const reply = eventHeader === 'Stop' ? '{"decision":"stop"}' : '{}';
+          let payload: AntigravityHookPayload;
+          try {
+            payload = (body.trim() ? JSON.parse(body) : {}) as AntigravityHookPayload;
+          } catch {
+            res.writeHead(400).end();
+            return;
+          }
+          res.writeHead(200, { 'content-type': 'application/json' }).end(reply);
+          if (isAgyHookEvent(eventHeader)) {
+            void handleAntigravityHook(eventHeader, payload).catch((err) => console.error('[orbi] antigravity hook error', err));
+          }
+          return;
+        }
+
         let payload: HookPayload;
         try {
           payload = JSON.parse(body) as HookPayload;

@@ -139,6 +139,12 @@ export interface ClaudeBridgeState {
   settingsPath: string;
 }
 
+export interface AntigravityBridgeState {
+  hooksInstalled: boolean;
+  lastHookAt?: number;
+  hooksPath: string;
+}
+
 export interface HubState {
   tools: ToolStatus[];
   sessions: AgentSession[];
@@ -148,6 +154,7 @@ export interface HubState {
   permissions: PermissionRequest[];
   github?: GithubSnapshot | GithubError;
   claude: ClaudeBridgeState;
+  antigravity: AntigravityBridgeState;
 }
 
 export interface CustomTool {

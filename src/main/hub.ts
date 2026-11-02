@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { BUILTIN_TOOLS, ago } from '@shared/tools';
 import type {
   AgentSession,
+  AntigravityBridgeState,
   ClaudeBridgeState,
   GithubError,
   GithubSnapshot,
@@ -54,6 +55,10 @@ class Hub {
     serverPort: 0,
     serverOk: false,
     settingsPath: join(process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude'), 'settings.json'),
+  };
+  antigravity: AntigravityBridgeState = {
+    hooksInstalled: false,
+    hooksPath: join(homedir(), '.gemini', 'config', 'hooks.json'),
   };
 
   constructor() {
@@ -221,6 +226,11 @@ class Hub {
     this.changed();
   }
 
+  setAntigravity(patch: Partial<AntigravityBridgeState>) {
+    this.antigravity = { ...this.antigravity, ...patch };
+    this.changed();
+  }
+
   private tools(): ToolStatus[] {
     const now = Date.now();
     const sessions = [...this.sessions.values()];
@@ -238,7 +248,6 @@ class Hub {
         availability = 'active';
         detail = `Ativo em ${live.project}`;
       } else if (installed && d?.lastWrite && now - d.lastWrite < ACTIVE_MS) {
-        // Tools without session files we can read (Antigravity): recent writes mean it is working.
         availability = 'active';
         detail = 'Atividade agora';
       } else if (installed) {
@@ -264,10 +273,14 @@ class Hub {
       ? 'Hooks do Claude Code + transcrições em ~/.claude/projects'
       : 'Transcrições em ~/.claude/projects (conecte os hooks para eventos em tempo real)';
 
+    const antigravitySource = this.antigravity.hooksInstalled
+      ? 'Hooks globais em ~/.gemini/config/hooks.json + transcrições em ~/.gemini/antigravity'
+      : 'Transcrições em ~/.gemini/antigravity (conecte os hooks para eventos instantâneos)';
+
     const list: ToolStatus[] = [
       agent('claude', claudeSource, { label: 'Como instalar', url: 'https://code.claude.com/docs/en/setup' }),
       agent('codex', 'Sessões em ~/.codex/sessions', { label: 'Como instalar', url: 'https://github.com/openai/codex' }),
-      agent('antigravity', 'API local do Antigravity (enquanto ele está aberto) + ~/.gemini/antigravity-ide', {
+      agent('antigravity', antigravitySource, {
         label: 'Como instalar',
         url: 'https://antigravity.google',
       }),
@@ -338,6 +351,7 @@ class Hub {
       permissions: [...this.pending.values()].map((p) => p.req).sort((a, b) => a.createdAt - b.createdAt),
       github: this.github,
       claude: this.claude,
+      antigravity: this.antigravity,
     };
   }
 
