@@ -2,7 +2,7 @@ import { basename, truncate } from '@shared/tools';
 export { cleanAntigravityArg, describeAntigravityTool } from './antigravityTranscript';
 
 /** Human label + optional monospace payload for a Claude Code tool call. */
-export function describeClaudeTool(name: string, input: unknown): { label: string; code?: string } {
+export function describeClaudeTool(name: string, input: unknown): { label: string; code?: string; file?: string; hint?: string } {
   const i = (input ?? {}) as Record<string, unknown>;
   const s = (k: string) => (typeof i[k] === 'string' ? (i[k] as string) : '');
   switch (name) {
@@ -13,12 +13,17 @@ export function describeClaudeTool(name: string, input: unknown): { label: strin
     case 'MultiEdit': {
       const added = lines(s('new_string'));
       const removed = lines(s('old_string'));
-      return { label: `Editando ${basename(s('file_path'))}`, code: added || removed ? `+${added} −${removed}` : undefined };
+      return {
+        label: `Editando ${basename(s('file_path'))}`,
+        code: added || removed ? `+${added} −${removed}` : undefined,
+        file: s('file_path') || undefined,
+        hint: s('new_string') || undefined,
+      };
     }
     case 'Write':
-      return { label: `Escrevendo ${basename(s('file_path'))}`, code: `+${lines(s('content'))}` };
+      return { label: `Escrevendo ${basename(s('file_path'))}`, code: `+${lines(s('content'))}`, file: s('file_path') || undefined };
     case 'Read':
-      return { label: `Lendo ${basename(s('file_path'))}` };
+      return { label: `Lendo ${basename(s('file_path'))}`, file: s('file_path') || undefined };
     case 'NotebookEdit':
       return { label: `Editando ${basename(s('notebook_path'))}` };
     case 'Grep':

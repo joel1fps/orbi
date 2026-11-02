@@ -150,6 +150,8 @@ interface WatchedTranscript {
   mtime: number;
   tracker: AgySessionTracker;
   hookSource?: boolean;
+  /** Last file (not folder) a tool call touched, for the live session window. */
+  lastFile?: string;
 }
 
 const watched = new Map<string, WatchedTranscript>();
@@ -195,6 +197,7 @@ function publishTracker(w: WatchedTranscript, silent: boolean, pendingEvent?: { 
     state: t.state,
     current: t.current,
     currentCode: t.currentCode,
+    ...(w.lastFile ? { file: w.lastFile } : {}),
     steps: t.steps,
     lastStep: t.lastStep,
     summary: t.summary,
@@ -241,7 +244,10 @@ async function consumeTranscript(w: WatchedTranscript, start: number, end: numbe
     const effect = applyAntigravityTranscriptLine(w.tracker, line, w.mtime || Date.now());
     if (effect.changed) changed = true;
     if (effect.event) latestEvent = { kind: effect.event, detail: effect.detail };
-    for (const p of effect.touchedPaths) touched.push(p);
+    for (const p of effect.touchedPaths) {
+      touched.push(p);
+      if (/\.[A-Za-z0-9]{1,8}$/.test(p)) w.lastFile = p;
+    }
     for (const sub of w.tracker.subagentIds) {
       knownSubagents.add(sub);
       hub.removeSession(sub);

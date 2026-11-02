@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Radio, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
 import { ago, BUILTIN_TOOLS, isBuiltin, until } from '@shared/tools';
 import type { AgentSession, CiState, PlanUsage, ToolStatus } from '@shared/types';
 import { SimTag, ToolFace } from '../components/ui';
@@ -8,15 +8,16 @@ import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
 import { PermissionCard } from './PermissionCard';
 import { ArsenalSheet } from './Arsenal';
+import { LiveSession } from './Live';
 import { SettingsSheet } from './Settings';
 import { ToolsSheet } from './Tools';
 
 export function Panel() {
   const tab = useApp((s) => s.tab);
   return (
-    <div className={tab === 'home' ? 'panel' : 'sheet'}>
+    <div className={tab === 'home' ? 'panel' : tab === 'live' ? 'live' : 'sheet'}>
       <PanelHead />
-      {tab === 'home' ? <Home /> : tab === 'arsenal' ? <ArsenalSheet /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
+      {tab === 'home' ? <Home /> : tab === 'live' ? <LiveSession /> : tab === 'arsenal' ? <ArsenalSheet /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
     </div>
   );
 }
@@ -123,6 +124,7 @@ function SessionDetail() {
   const sessions = useApp((s) => s.hub.sessions);
   const index = useApp((s) => s.sessionIndex);
   const setIndex = useApp((s) => s.setSessionIndex);
+  const setTab = useApp((s) => s.setTab);
 
   if (sessions.length === 0) {
     return (
@@ -197,13 +199,16 @@ function SessionDetail() {
           </>
         )}
 
-        {s.cwd && !s.simulated ? (
-          <div className="hero__actions">
+        <div className="hero__actions">
+          <button className="btn btn--light" onClick={() => setTab('live')}>
+            <Radio size={13} /> Ao vivo
+          </button>
+          {s.cwd && !s.simulated ? (
             <button className="btn" onClick={() => window.orbi.openPath(s.cwd!)}>
               <FolderOpen size={13} /> Abrir pasta
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

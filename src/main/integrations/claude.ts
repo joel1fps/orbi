@@ -2,7 +2,8 @@ import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { basename, truncate } from '@shared/tools';
-import type { PermissionDecision } from '@shared/types';
+import { appendStep, stepKind } from '@shared/steps';
+import type { PermissionDecision, SessionStep } from '@shared/types';
 import { hub } from '../hub';
 import { refreshClaudeUsageSoon } from './claudeUsage';
 import { describeClaudeTool, describePermission } from './describe';
@@ -71,7 +72,7 @@ export function handleHook(p: HookPayload): void {
     }
     case 'PreToolUse': {
       const d = describeClaudeTool(p.tool_name ?? '', p.tool_input);
-      hub.upsertSession(id, { ...base, state: 'working', current: d.label, currentCode: d.code });
+      hub.upsertSession(id, { ...base, state: 'working', current: d.label, currentCode: d.code, ...(d.file ? { file: d.file, fileHint: d.hint } : {}) });
       break;
     }
     case 'PostToolUse': {
@@ -170,6 +171,7 @@ function firstSentence(text: string | undefined): string | undefined {
 interface TranscriptEntry {
   type?: string;
   isSidechain?: boolean;
+  timestamp?: string;
   cwd?: string;
   message?: { role?: string; stop_reason?: string | null; content?: unknown };
 }
@@ -261,14 +263,27 @@ async function inspect(path: string, mtime: number, size: number, silent: boolea
   let steps = 0;
   let lastStep: { label: string; ok: boolean } | undefined;
   const toolNames = new Map<string, { name: string; input: unknown }>();
+  // Every tool call since the prompt, for the live session window (polling alone would only see the last one).
+  let trail: SessionStep[] = [];
+  let file: string | undefined;
+  let fileHint: string | undefined;
   for (const e of entries) {
     const content = Array.isArray(e.message?.content) ? (e.message!.content as Record<string, unknown>[]) : [];
     if (e.type === 'user' && (typeof e.message?.content === 'string' || content.some((c) => c.type === 'text'))) {
       steps = 0;
+      trail = [];
       lastStep = undefined;
     }
     for (const c of content) {
-      if (c.type === 'tool_use') toolNames.set(String(c.id), { name: String(c.name), input: c.input });
+      if (c.type === 'tool_use') {
+        toolNames.set(String(c.id), { name: String(c.name), input: c.input });
+        const d = describeClaudeTool(String(c.name), c.input);
+        trail = appendStep(trail, { kind: stepKind(d.label, d.code), label: d.label, code: d.code, file: d.file, at: Date.parse(e.timestamp ?? '') || mtime });
+        if (d.file) {
+          file = d.file;
+          fileHint = d.hint;
+        }
+      }
       if (c.type === 'tool_result') {
         steps++;
         const t = toolNames.get(String(c.tool_use_id));
@@ -314,6 +329,8 @@ async function inspect(path: string, mtime: number, size: number, silent: boolea
     state,
     current,
     currentCode: code,
+    ...(file ? { file, fileHint } : {}),
+    trail,
     steps,
     lastStep,
     summary,

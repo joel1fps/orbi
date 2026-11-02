@@ -8,6 +8,7 @@ import type {
   OrbiEvent,
   PermissionDecision,
   Settings,
+  SessionFileView,
   SimulationKind,
   SkillActionResult,
   SkillCatalog,
@@ -56,6 +57,7 @@ const api = {
   openExternal: (url: string) => ipcRenderer.send('open:external', url),
   openPath: (p: string) => ipcRenderer.send('open:path', p),
   launchTool: (id: string) => ipcRenderer.send('tool:launch', id),
+  sessionFile: (sessionId: string): Promise<SessionFileView | null> => ipcRenderer.invoke('session:file', sessionId),
   skillsCatalog: (): Promise<SkillCatalog> => ipcRenderer.invoke('skills:catalog'),
   skillsPlan: (skillId: string, targets: SkillTargetId[]): Promise<SkillPlan | { error: string }> => ipcRenderer.invoke('skills:plan', skillId, targets),
   skillsApply: (planId: string, opts: { replace: boolean; allowScripts: boolean }): Promise<SkillActionResult> =>

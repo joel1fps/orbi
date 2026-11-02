@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { appendStep, stepKind } from '@shared/steps';
 import { BUILTIN_TOOLS, ago } from '@shared/tools';
 import type {
   AgentSession,
@@ -89,6 +90,17 @@ class Hub {
       ...patch,
       updatedAt: patch.updatedAt ?? now,
     };
+    // Live session window: a new task starts a new trail; each new "current" is a step.
+    if (patch.startedAt !== undefined && patch.startedAt !== prev?.startedAt) next.trail = [];
+    if (patch.current && (patch.current !== prev?.current || patch.currentCode !== prev?.currentCode)) {
+      next.trail = appendStep(next.trail ?? [], {
+        kind: stepKind(patch.current, patch.currentCode),
+        label: patch.current,
+        code: patch.currentCode,
+        file: patch.file,
+        at: next.updatedAt,
+      });
+    }
     this.sessions.set(id, next);
     this.changed();
     return next;

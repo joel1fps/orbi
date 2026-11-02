@@ -1,5 +1,5 @@
 export type ViewMode = 'compact' | 'panel';
-export type PanelTab = 'home' | 'arsenal' | 'tools' | 'settings';
+export type PanelTab = 'home' | 'live' | 'arsenal' | 'tools' | 'settings';
 export type MascotStyle = '2d' | '3d';
 
 export type BuiltinToolId = 'claude' | 'codex' | 'antigravity' | 'gemini' | 'hermes' | 'github';
@@ -50,6 +50,11 @@ export interface AgentSession {
   startedAt: number;
   updatedAt: number;
   summary?: string;
+  /** Recent steps, newest last (live session window). */
+  trail?: SessionStep[];
+  /** Last file the agent read or edited (absolute), and the text it wrote there. */
+  file?: string;
+  fileHint?: string;
   simulated?: boolean;
   source: 'hooks' | 'transcript' | 'rollout' | 'simulator';
 }
@@ -288,4 +293,29 @@ export interface SkillActionResult {
   ok: boolean;
   message: string;
   details: { targetId: SkillTargetId; ok: boolean; message: string }[];
+}
+
+// ---------- live session window ----------
+
+export type StepKind = 'think' | 'read' | 'edit' | 'bash' | 'search' | 'web' | 'done' | 'error' | 'other';
+
+/** One thing the agent did, for the live session window. */
+export interface SessionStep {
+  kind: StepKind;
+  label: string;
+  code?: string;
+  /** File the step touched, if any (absolute). */
+  file?: string;
+  at: number;
+}
+
+/** What the live session window shows of the file the agent touched last. */
+export interface SessionFileView {
+  path: string;
+  name: string;
+  /** 1-based line number of lines[0]. */
+  start: number;
+  lines: string[];
+  highlight: number[];
+  totalLines: number;
 }

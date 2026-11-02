@@ -19,6 +19,7 @@ import { startGeminiQuota } from './integrations/geminiQuota';
 import { refreshGithub, startGithub } from './integrations/github';
 import { startDebugServer } from './debug';
 import { resource } from './resources';
+import { sessionFile } from './sessionFile';
 import { simulate } from './simulator';
 import { applyPlan, openSkillFolder, planInstall, skillsCatalog, uninstallSkill } from './skills/manager';
 import { flush, loadStore, store } from './store';
@@ -253,6 +254,7 @@ function registerIpc() {
   ipcMain.on('open:path', (_e, path: unknown) => {
     if (typeof path === 'string' && isAbsolute(path) && existsSync(path) && statSync(path).isDirectory()) void shell.openPath(path);
   });
+  ipcMain.handle('session:file', (_e, id: unknown) => sessionFile(id));
   ipcMain.handle('skills:catalog', () => skillsCatalog());
   ipcMain.handle('skills:plan', (_e, skillId: unknown, targets: unknown) => planInstall(String(skillId), Array.isArray(targets) ? targets : []));
   ipcMain.handle('skills:apply', (_e, planId: unknown, opts: { replace?: unknown; allowScripts?: unknown } | undefined) =>
