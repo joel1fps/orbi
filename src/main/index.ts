@@ -210,6 +210,7 @@ function registerIpc() {
     docked: store.window.docked,
     // The entrance plays for the first window of this run only, not on a renderer reload.
     intro: takeIntro(),
+    idle: idleLevel,
   }));
   ipcMain.on('widget:interactive', (_e, on: boolean) => setInteractive(Boolean(on)));
   ipcMain.on('widget:drag-start', () => dragStart());

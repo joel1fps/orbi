@@ -34,7 +34,7 @@ export interface ConditionInput {
   now: number;
   permissions: number;
   sessions: Pick<AgentSession, 'state' | 'updatedAt' | 'current'>[];
-  usage: Pick<PlanUsage, 'fiveHour' | 'week'>[];
+  usage: Pick<PlanUsage, 'tool' | 'fiveHour' | 'week'>[];
   idle: IdleLevel;
 }
 
@@ -48,7 +48,9 @@ export function resolveCondition(i: ConditionInput): Condition {
   if (i.sessions.some((s) => s.state === 'error' && i.now - s.updatedAt < ERROR_MS)) return 'error';
   const live = i.sessions.filter((s) => s.state === 'working' && i.now - s.updatedAt < ACTIVE_MS);
   if (live.length > 0) return live.every((s) => s.current && THINKING.has(s.current)) ? 'thinking' : 'running';
+  // Antigravity's headline is one model's quota; the others may still be free.
   const limited = i.usage.some((u) =>
+    u.tool !== 'antigravity' &&
     [u.fiveHour, u.week].some((w) => w && w.usedPercent >= 100 && (w.resetsAt === undefined || w.resetsAt > i.now)),
   );
   if (limited) return 'ratelimit';

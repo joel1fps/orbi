@@ -193,6 +193,7 @@ export interface InitialState {
   docked: boolean;
   /** First window of this run: play the entrance once (not on a renderer reload). */
   intro: boolean;
+  idle: IdleLevel;
 }
 
 export type MainCommand =

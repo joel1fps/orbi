@@ -77,7 +77,8 @@ export const useApp = create<AppState>()((set, get) => ({
     if (!canReplace(current, kind, now)) {
       const spec = REACTIONS[kind];
       if (spec.priority < EVENT_PRIORITY || !current) return;
-      if (queued && REACTIONS[queued.kind].priority > spec.priority) return;
+      // One slot: the first of two equally important events keeps it.
+      if (queued && REACTIONS[queued.kind].priority >= spec.priority) return;
       if (queued) clearTimeout(queued.timer);
       queued = { kind, timer: setTimeout(() => ((queued = null), get().react(kind)), current.until - now + 30) };
       return;
@@ -109,7 +110,7 @@ const EVENT_REACTION: Partial<Record<OrbiEvent['kind'], ReactionKind>> = {
 export async function boot() {
   const init = await window.orbi.initial();
   const intro = init.intro && !init.settings.reduceMotion;
-  useApp.setState({ settings: init.settings, hub: init.hub, view: init.view, docked: init.docked, intro });
+  useApp.setState({ settings: init.settings, hub: init.hub, view: init.view, docked: init.docked, intro, idle: init.idle });
 
   window.orbi.onHub((hub) => useApp.setState({ hub }));
   window.orbi.onSettings((settings) => useApp.setState({ settings }));

@@ -13,6 +13,7 @@ import type {
   SkillPlan,
   SkillTargetId,
   SkillTargetInfo,
+  ToolStatus,
 } from '@shared/types';
 import { hub } from '../hub';
 import { resource } from '../resources';
@@ -82,11 +83,11 @@ const targetDir = (t: SkillTargetId) => join(homedir(), ...SKILL_TARGETS[t].dir.
 const skillDir = (t: SkillTargetId, name: string) => join(targetDir(t), name);
 const isTarget = (t: unknown): t is SkillTargetId => typeof t === 'string' && (TARGET_IDS as string[]).includes(t);
 
-function detected(t: SkillTargetId): boolean {
+function detected(t: SkillTargetId, tools: ToolStatus[]): boolean {
   if (t === 'cursor') {
     return existsSync(join(homedir(), '.cursor')) || existsSync(join(process.env.LOCALAPPDATA ?? '', 'Programs', 'cursor'));
   }
-  return hub.snapshot().tools.find((x) => x.id === t)?.availability !== 'not-installed';
+  return tools.find((x) => x.id === t)?.availability !== 'not-installed';
 }
 
 // ---------- ledger ----------
@@ -218,11 +219,12 @@ async function scanInstalled(ledger: LedgerEntry[]): Promise<InstalledSkill[]> {
 }
 
 export async function skillsCatalog(): Promise<SkillCatalog> {
+  const tools = hub.snapshot().tools;
   const targets: SkillTargetInfo[] = TARGET_IDS.map((t) => ({
     id: t,
     name: SKILL_TARGETS[t].name,
     dir: targetDir(t),
-    detected: detected(t),
+    detected: detected(t, tools),
     alsoVisibleTo: alsoVisibleTo(t),
     docs: SKILL_TARGETS[t].docs,
   }));

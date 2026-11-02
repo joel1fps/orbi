@@ -27,8 +27,10 @@ test('stale working sessions do not count', () => {
 });
 
 test('a plan window at 100% that has not reset means rate limited', () => {
-  const full = { fiveHour: { usedPercent: 100, resetsAt: now + 60_000 } };
-  const reset = { fiveHour: { usedPercent: 100, resetsAt: now - 1 } };
+  const full = { tool: 'claude' as const, fiveHour: { usedPercent: 100, resetsAt: now + 60_000 } };
+  const reset = { tool: 'claude' as const, fiveHour: { usedPercent: 100, resetsAt: now - 1 } };
+  const oneModel = { tool: 'antigravity' as const, fiveHour: { usedPercent: 100, resetsAt: now + 60_000 } };
+  assert.equal(resolveCondition({ ...base, usage: [oneModel] }), 'idle', 'one Antigravity model at 100% is not a rate limit');
   assert.equal(resolveCondition({ ...base, usage: [full] }), 'ratelimit');
   assert.equal(resolveCondition({ ...base, usage: [reset] }), 'idle');
 });
