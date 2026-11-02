@@ -1269,6 +1269,210 @@ button {
   color: var(--muted);
 }
 
+/* ---------- arsenal: cards and agent buttons ---------- */
+.arsenal__select {  flex: 1;  cursor: pointer;}.arsenal__select option {  background: #0c100f;  color: var(--text);}.arsenal__count {  flex: none;  font-size: 11.5px;  color: var(--faint);}
+
+.arsenal__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.acard {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 136px;
+  padding: 11px 12px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease),
+    background 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+.acard:hover {
+  border-color: var(--line-2);
+  background: var(--card-2);
+  transform: translateY(-1px);
+}
+.acard:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+.acard__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.acard__kind {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(79, 183, 162, 0.14);
+  color: var(--teal-light);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.acard__kind--manual {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+.acard__star {
+  color: var(--sun);
+  fill: var(--sun);
+  flex: none;
+}
+.acard__count {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--faint);
+}
+.acard__name {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.acard__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.acard__foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 11px;
+}
+.acard__agents {
+  display: inline-flex;
+  gap: 3px;
+}
+.acard__agent {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.acard__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: var(--green);
+}
+.acard__manual {
+  margin-left: auto;
+  color: var(--faint);
+}
+.arsenal__origin {
+  margin: -4px 4px 8px;
+}
+.agents {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.agent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.agent__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  border-top: 3px solid var(--agent);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease),
+    border-color 160ms var(--ease);
+}
+.agent__btn:hover:not(:disabled) {
+  background: var(--card-2);
+}
+.agent__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  border-top-color: var(--line-2);
+}
+.agent__btn--done {
+  border-color: rgba(87, 201, 147, 0.4);
+}
+.agent__name {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.agent__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.agent__btn--done .agent__state {
+  color: var(--green);
+}
+.agent__hint {
+  font-size: 10px;
+  color: var(--faint);
+}
+.agent__remove {
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+}
+.agent__remove:hover {
+  color: var(--red);
+}
+.arsenal__cmd {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 4px 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #0b0f0e;
+  border: 1px solid var(--line);
+}
+.arsenal__cmd pre {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
 /* ---------- permission ---------- */
 
 .perm {

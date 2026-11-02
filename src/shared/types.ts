@@ -225,16 +225,37 @@ export type SkillTargetId = 'claude' | 'codex' | 'gemini' | 'antigravity' | 'cur
 /** Per agent: installed by Orbi (current or outdated), or a folder with that name Orbi did not install. */
 export type SkillInstallState = 'installed' | 'update' | 'external';
 
+export interface SkillFileInfo {
+  path: string;
+  size: number;
+  script: boolean;
+}
+
+/**
+ * One card in the Arsenal: a package of SKILL.md folders Orbi can install
+ * (one for a single skill, several for a pack like Superpowers), or a manual
+ * reference (MCP, CLI, guide…) with the install command from the references site.
+ */
 export interface SkillCatalogEntry {
   id: string;
   name: string;
   description: string;
   category: string;
+  /** Skill, Plugin, MCP, CLI, Guia… */
+  kind: string;
+  /** Hand-picked by Orbi, or from the user's references site. */
+  origin: 'curated' | 'refs';
+  /** Marked as part of the user's own stack on the references site. */
+  mine: boolean;
+  /** Agents that can use it. */
+  support: SkillTargetId[];
   license: string;
   version?: string;
-  source: { label: string; repo: string; commit: string; url: string };
+  source?: { label: string; repo: string; commit: string; url: string };
+  /** The SKILL.md folders it installs; empty for a manual reference. */
+  skills: { name: string; files: SkillFileInfo[] }[];
   hasScripts: boolean;
-  files: { path: string; size: number; script: boolean }[];
+  manual?: { install?: string; url: string; docs?: string; note?: string };
   installs: Partial<Record<SkillTargetId, SkillInstallState>>;
 }
 
@@ -274,15 +295,18 @@ export interface SkillPlanTarget {
   alsoVisibleTo: SkillTargetId[];
   /** Another pick already gives this agent the skill through a shared folder. */
   redundant: boolean;
+  /** Each folder of the package and what installing does to it. */
+  folders: { name: string; status: SkillPlanTarget['status'] }[];
 }
 
 export interface SkillPlan {
   id: string;
   skillId: string;
   name: string;
-  source: SkillCatalogEntry['source'];
+  source: NonNullable<SkillCatalogEntry['source']>;
   license: string;
-  files: SkillCatalogEntry['files'];
+  /** Every file, as "<folder>/<path>". */
+  files: SkillFileInfo[];
   totalBytes: number;
   hasScripts: boolean;
   targets: SkillPlanTarget[];

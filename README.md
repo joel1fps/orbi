@@ -47,9 +47,9 @@ As preferências ficam salvas em `%APPDATA%\Orbi\orbi-state.json`. A versão 0.1
 
 ## Arsenal de Skills
 
-Aba com as espadas no painel (ou "Arsenal de Skills" na bandeja). Mostra um catálogo curado de skills no formato aberto *Agent Skills* (uma pasta com um `SKILL.md`), com busca, categorias, origem, licença e versão, e as skills já presentes nas pastas dos agentes, instaladas pelo Orbi ou não.
+Aba com as espadas no painel (ou "Arsenal de Skills" na bandeja): cartões lado a lado com busca, categorias e os filtros **Tudo**, **Meu site** e **Instaladas**. O catálogo junta uma curadoria do Orbi e tudo o que está no seu site de referências (`minhas-referencias`, `src/data/ai.ts`): Skills e Plugins com repositório no GitHub viram pacotes instaláveis (um pacote pode trazer várias skills, como o Superpowers); MCPs, CLIs, guias e bibliotecas aparecem como instalação manual, com o comando do próprio site e um botão de copiar. A estrela marca o que está na sua stack.
 
-Instalar: escolher a skill → marcar os agentes → **Conferir** (o que será gravado, onde, e o que já existe) → **Confirmar** → resultado.
+Instalar: clicar no cartão → escolher o agente (cada botão só fica ativo se o item declara suporte a ele; o suporte vem do campo `compat` do site) → **Conferir** (o que será gravado, onde, e o que já existe) → **Confirmar** → resultado. Também há "Instalar em todos os compatíveis encontrados".
 
 | Agente | Pasta (global) |
 | --- | --- |
@@ -68,7 +68,7 @@ Segurança:
 - Cada instalação fica registrada em `%APPDATA%\Orbi\skills-ledger.json`. Remover apaga só os arquivos ainda idênticos ao que o Orbi gravou; o que você editou ou criou fica.
 - Todo acesso a disco e rede acontece no processo principal; a interface só envia identificadores.
 
-Para atualizar o catálogo (mantenedores): `node scripts/build-skills-index.mjs` fixa o commit atual de cada fonte e recalcula os hashes; revise o diff antes de publicar. Uma skill nova entra pela lista `SOURCES` do script.
+Para atualizar o catálogo (mantenedores): `node scripts/build-skills-index.mjs [--refs <pasta do site>]` lê o site de referências (por padrão `../minhas-referencias`), fixa o commit atual de cada repositório (via `git ls-remote`, sem gastar cota da API) e recalcula os hashes; revise o diff antes de publicar. Repositórios grandes demais (mais de 30 skills num plugin ou 25 MB) viram instalação manual sem serem baixados.
 
 ## Integrações e de onde vêm os dados
 

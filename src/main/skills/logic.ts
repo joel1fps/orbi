@@ -182,3 +182,12 @@ export function uninstallSplit(installed: { path: string; sha256: string }[], on
   const removed = new Set(remove);
   return { remove, keep: [...onDisk.keys()].filter((p) => !removed.has(p)) };
 }
+
+/** One status for a package in one agent: the most cautious of its folders. */
+export function aggregateStatus(statuses: TargetStatus[]): TargetStatus {
+  if (statuses.includes('conflict')) return 'conflict';
+  if (statuses.includes('modified')) return 'modified';
+  if (statuses.every((s) => s === 'same')) return 'same';
+  if (statuses.every((s) => s === 'new')) return 'new';
+  return 'update';
+}

@@ -1,24 +1,36 @@
-// Builds resources/skills-index.json, the curated catalog of the Skills Arsenal.
+// Builds resources/skills-index.json, the catalog of the Skills Arsenal.
 //
-//   node scripts/build-skills-index.mjs            # pin the current commit of each source
-//   node scripts/build-skills-index.mjs --keep     # re-hash the commits already pinned
+//   node scripts/build-skills-index.mjs [--refs <pasta do site de referências>]
 //
-// Each skill is pinned to a commit and every file gets its size and sha256;
-// the app refuses anything that does not match. To add a skill, add it to
-// SOURCES (only Apache-2.0 or MIT skills), run this script and review the diff.
+// Two sources:
+//  - CURATED: hand-picked Apache-2.0/MIT skills from official repositories;
+//  - the references site (minhas-referencias, src/data/ai.ts): every Skill or
+//    Plugin with a GitHub repository becomes a package with the SKILL.md
+//    folders found in it; everything else (MCPs, CLIs, guides…) becomes a
+//    manual card with the site's own install command.
+// Each package is pinned to a commit and every file gets its size and sha256;
+// the app refuses anything that does not match. Commits come from
+// `git ls-remote` (no API quota); each repository costs one GitHub API call
+// for its file tree. Review the diff before publishing.
 
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, writeFileSync } from 'node:fs';
+import { join, posix } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseFrontmatter, validateManifest } from '../src/main/skills/logic.ts';
 
-const OUT = join(import.meta.dirname, '..', 'resources', 'skills-index.json');
+const ROOT = join(import.meta.dirname, '..');
+const OUT = join(ROOT, 'resources', 'skills-index.json');
+const ALL = ['claude', 'codex', 'gemini', 'antigravity', 'cursor'];
+const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const MAX_PACKAGE_BYTES = 25 * 1024 * 1024;
+const MAX_SKILLS = { Skill: 60, Plugin: 30 };
 
-const SOURCES = [
+const CURATED = [
   {
-    id: 'anthropics',
-    label: 'Anthropic',
     repo: 'anthropics/skills',
+    label: 'Anthropic',
     base: 'skills',
     skills: {
       'frontend-design': 'Frontend',
@@ -30,9 +42,8 @@ const SOURCES = [
     },
   },
   {
-    id: 'openai',
-    label: 'OpenAI',
     repo: 'openai/skills',
+    label: 'OpenAI',
     base: 'skills/.curated',
     skills: {
       'gh-address-comments': 'GitHub',
@@ -47,12 +58,34 @@ const SOURCES = [
   },
 ];
 
-const ALLOWED_LICENSES = ['Apache-2.0', 'MIT'];
+// ---------- GitHub ----------
 
-async function json(url) {
-  const res = await fetch(url, { headers: { accept: 'application/vnd.github+json', 'user-agent': 'orbi-skills-index' } });
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return res.json();
+const commits = new Map();
+function commitOf(repo, ref) {
+  const key = `${repo}@${ref ?? 'HEAD'}`;
+  if (!commits.has(key)) {
+    const want = ref ? [`refs/heads/${ref}`, `refs/tags/${ref}`] : ['HEAD'];
+    const out = execFileSync('git', ['ls-remote', `https://github.com/${repo}`, ...want], { encoding: 'utf8', timeout: 30_000 });
+    const sha = out.split('\n')[0]?.split('\t')[0];
+    if (!/^[0-9a-f]{40}$/.test(sha ?? '')) throw new Error(`no commit for ${key}`);
+    commits.set(key, sha);
+  }
+  return commits.get(key);
+}
+
+const trees = new Map();
+async function treeOf(repo, commit) {
+  const key = `${repo}@${commit}`;
+  if (!trees.has(key)) {
+    const res = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commit}?recursive=1`, {
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'orbi-skills-index' },
+    });
+    if (!res.ok) throw new Error(`${res.status} tree of ${repo}`);
+    const body = await res.json();
+    if (body.truncated) throw new Error(`tree of ${repo} is truncated`);
+    trees.set(key, body.tree.filter((e) => e.type === 'blob'));
+  }
+  return trees.get(key);
 }
 
 async function raw(repo, commit, path) {
@@ -62,58 +95,173 @@ async function raw(repo, commit, path) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-function licenseOf(text) {
+function licenseName(text) {
   if (/Apache License/i.test(text)) return 'Apache-2.0';
-  if (/MIT License/i.test(text)) return 'MIT';
-  return 'unknown';
+  if (/MIT License|Permission is hereby granted, free of charge/i.test(text)) return 'MIT';
+  if (/BSD/i.test(text)) return 'BSD';
+  if (/Mozilla Public License/i.test(text)) return 'MPL-2.0';
+  if (/GNU (AFFERO|LESSER|GENERAL)/i.test(text)) return 'GPL';
+  if (/ISC License/i.test(text)) return 'ISC';
+  if (/unlicense/i.test(text)) return 'Unlicense';
+  if (/Creative Commons/i.test(text)) return 'CC';
+  return 'desconhecida';
 }
 
-const keep = process.argv.includes('--keep');
-const previous = keep && existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : null;
-const skills = [];
+async function licenseOf(repo, commit, blobs, dir) {
+  const pick = (prefix) => blobs.find((b) => new RegExp(`^${prefix}LICEN[CS]E(\\.(md|txt))?$`, 'i').test(b.path));
+  const own = dir ? pick(dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/') : undefined;
+  const b = own ?? pick('');
+  return b ? licenseName((await raw(repo, commit, b.path)).toString('utf8')) : 'desconhecida';
+}
 
-for (const src of SOURCES) {
-  const commit = previous?.sources.find((s) => s.id === src.id)?.commit ?? (await json(`https://api.github.com/repos/${src.repo}/commits/HEAD`)).sha;
-  const tree = await json(`https://api.github.com/repos/${src.repo}/git/trees/${commit}?recursive=1`);
-  if (tree.truncated) throw new Error(`tree of ${src.repo} is truncated`);
-  for (const [dir, category] of Object.entries(src.skills)) {
-    const prefix = `${src.base}/${dir}/`;
-    const blobs = tree.tree.filter((e) => e.type === 'blob' && e.path.startsWith(prefix));
+// ---------- skills inside a repository ----------
+
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64) || 'skill';
+
+/** The SKILL.md folders under `prefix` and their files (minus nested skills), from the tree alone: no download. */
+function layoutOf(blobs, prefix) {
+  const inPrefix = (p) => !prefix || p === prefix || p.startsWith(prefix + '/');
+  const dirs = blobs.filter((b) => inPrefix(b.path) && posix.basename(b.path) === 'SKILL.md').map((b) => posix.dirname(b.path));
+  return dirs.map((dir) => {
+    const nested = dirs.filter((d) => d !== dir && (dir === '.' || d.startsWith(dir + '/')));
+    const own = blobs.filter((b) => (dir === '.' || b.path.startsWith(dir + '/')) && !nested.some((n) => b.path.startsWith(n + '/')));
+    return { dir, own, bytes: own.reduce((n, b) => n + (b.size ?? 0), 0) };
+  });
+}
+
+/** Downloads and hashes every file of the given folders. */
+async function skillsIn(repo, commit, layout) {
+  const out = [];
+  const used = new Set();
+  for (const { dir, own } of layout) {
     const files = [];
     let skillMd = '';
-    let license = 'unknown';
-    for (const b of blobs) {
-      const rel = b.path.slice(prefix.length);
-      const bytes = await raw(src.repo, commit, b.path);
+    for (const b of own) {
+      const rel = dir === '.' ? b.path : b.path.slice(dir.length + 1);
+      const bytes = await raw(repo, commit, b.path);
       files.push({ path: rel, size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
       if (rel === 'SKILL.md') skillMd = bytes.toString('utf8');
-      if (/^LICENSE(\.txt|\.md)?$/i.test(rel)) license = licenseOf(bytes.toString('utf8'));
     }
     const fm = parseFrontmatter(skillMd);
-    const name = fm.name ?? dir;
-    const { errors, hasScripts } = validateManifest({ name, files });
-    if (errors.length) throw new Error(`${src.repo}/${dir}: ${errors.join(' ')}`);
-    if (!ALLOWED_LICENSES.includes(license)) throw new Error(`${src.repo}/${dir}: license ${license}`);
-    skills.push({
-      id: `${src.id}/${name}`,
-      name,
-      description: fm.description ?? '',
+    let name = fm.name && NAME.test(fm.name) ? fm.name : slug(fm.name ?? posix.basename(dir === '.' ? repo : dir));
+    for (let n = 2; used.has(name); n++) name = `${slug(name).slice(0, 60)}-${n}`;
+    const { errors } = validateManifest({ name, files });
+    if (errors.length) {
+      console.warn(`  skip ${repo}/${dir}: ${errors.join(' ')}`);
+      continue;
+    }
+    used.add(name);
+    out.push({ name, path: dir, description: fm.description, files: files.sort((a, b) => a.path.localeCompare(b.path)) });
+  }
+  return out;
+}
+
+function githubTarget(url) {
+  const m = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+)(?:\/(tree|blob)\/([^/]+)\/(.+))?\/?$/.exec(url ?? '');
+  if (!m) return null;
+  let path = m[5] ?? '';
+  if (m[3] === 'blob') path = posix.dirname(path);
+  return { repo: `${m[1]}/${m[2].replace(/\.git$/, '')}`, ref: m[4], path: path.replace(/\/$/, '') };
+}
+
+const hasScripts = (skills) =>
+  skills.some((s) => s.files.some((f) => f.path.split('/')[0] === 'scripts' || /\.(sh|ps1|bat|cmd|py|js|mjs|cjs|ts|rb|exe)$/i.test(f.path)));
+
+// ---------- build ----------
+
+const packages = [];
+
+for (const src of CURATED) {
+  const commit = commitOf(src.repo);
+  const blobs = await treeOf(src.repo, commit);
+  for (const [dir, category] of Object.entries(src.skills)) {
+    const path = `${src.base}/${dir}`;
+    const [skill] = await skillsIn(src.repo, commit, layoutOf(blobs, path));
+    if (!skill) throw new Error(`${src.repo}/${path}: no valid SKILL.md`);
+    const license = await licenseOf(src.repo, commit, blobs, path);
+    if (!['Apache-2.0', 'MIT'].includes(license)) throw new Error(`${src.repo}/${path}: license ${license}`);
+    packages.push({
+      id: `${src.repo.split('/')[0]}/${skill.name}`,
+      name: skill.name,
+      description: skill.description ?? '',
       category,
+      kind: 'Skill',
+      origin: 'curated',
+      support: ALL,
       license,
-      version: fm.version,
-      source: { id: src.id, label: src.label, repo: src.repo, commit, path: `${src.base}/${dir}`, url: `https://github.com/${src.repo}/tree/${commit}/${src.base}/${dir}` },
-      hasScripts,
-      files: files.sort((a, b) => a.path.localeCompare(b.path)),
+      source: { label: src.label, repo: src.repo, commit, url: `https://github.com/${src.repo}/tree/${commit}/${path}` },
+      skills: [{ name: skill.name, path, files: skill.files }],
+      hasScripts: hasScripts([skill]),
     });
-    console.log(`${src.repo}/${dir}: ${files.length} files${hasScripts ? ', scripts' : ''}`);
+    console.log(`curated ${src.repo}/${dir}`);
   }
 }
 
-const index = {
-  version: 1,
-  generatedAt: new Date().toISOString(),
-  sources: SOURCES.map((s) => ({ id: s.id, label: s.label, repo: s.repo, commit: skills.find((k) => k.source.id === s.id)?.source.commit })),
-  skills,
-};
-writeFileSync(OUT, JSON.stringify(index, null, 2) + '\n');
-console.log(`${skills.length} skills → ${OUT}`);
+const refsArg = process.argv.indexOf('--refs');
+const refsDir = refsArg > 0 ? process.argv[refsArg + 1] : join(ROOT, '..', 'minhas-referencias');
+const refsFile = join(refsDir, 'src', 'data', 'ai.ts');
+if (existsSync(refsFile)) {
+  const { AI_RESOURCES } = await import(pathToFileURL(refsFile).href);
+  for (const r of AI_RESOURCES) {
+    const support = r.compat === 'claude' ? ['claude'] : r.compat === 'codex' ? ['codex'] : ALL;
+    const category = r.mineSub ?? r.sub;
+    const base = {
+      id: `refs/${r.id}`,
+      name: r.name,
+      description: r.description,
+      category,
+      kind: r.kind,
+      origin: 'refs',
+      mine: Boolean(r.mine),
+      support,
+      manual: { install: r.install, url: r.url, docs: r.docs },
+    };
+    const gh = (r.kind === 'Skill' || r.kind === 'Plugin') && githubTarget(r.url);
+    if (!gh) {
+      packages.push({ ...base, skills: [], hasScripts: false, license: '' });
+      continue;
+    }
+    try {
+      const commit = commitOf(gh.repo, gh.ref);
+      const blobs = await treeOf(gh.repo, commit);
+      const curated = packages.find((p) => p.origin === 'curated' && p.source.repo === gh.repo && p.skills[0].path === gh.path);
+      if (curated) {
+        // The same skill is already curated: keep it once, with the site's description and category.
+        Object.assign(curated, { description: r.description, mine: Boolean(r.mine), refsId: r.id });
+        console.log(`refs ${r.id}: merged into ${curated.id}`);
+        continue;
+      }
+      // Limits from the tree's sizes first: a huge plugin repository is never downloaded just to be turned down.
+      const layout = layoutOf(blobs, gh.path);
+      const bytes = layout.reduce((n, l) => n + l.bytes, 0);
+      const tooMany = layout.length > (MAX_SKILLS[r.kind] ?? 30) || bytes > MAX_PACKAGE_BYTES;
+      const skills = layout.length === 0 || tooMany ? [] : await skillsIn(gh.repo, commit, layout);
+      if (skills.length === 0) {
+        const note =
+          layout.length === 0
+            ? 'Não traz pastas SKILL.md: instale pelo comando abaixo.'
+            : tooMany
+              ? `Grande demais para instalar por aqui (${layout.length} skills, ${(bytes / 1048576).toFixed(1)} MB): use o comando abaixo.`
+              : 'Nenhuma pasta passou na validação: instale pelo comando abaixo.';
+        packages.push({ ...base, manual: { ...base.manual, note }, skills: [], hasScripts: false, license: '' });
+        console.log(`refs ${r.id}: manual (${note})`);
+        continue;
+      }
+      packages.push({
+        ...base,
+        license: await licenseOf(gh.repo, commit, blobs, gh.path),
+        source: { label: gh.repo.split('/')[0], repo: gh.repo, commit, url: `https://github.com/${gh.repo}/tree/${commit}/${gh.path}` },
+        skills: skills.map(({ description: _d, ...s }) => s),
+        hasScripts: hasScripts(skills),
+      });
+      console.log(`refs ${r.id}: ${skills.length} skill(s)`);
+    } catch (err) {
+      console.warn(`refs ${r.id}: ${err.message} → manual`);
+      packages.push({ ...base, skills: [], hasScripts: false, license: '' });
+    }
+  }
+} else console.warn(`references site not found at ${refsDir}; only the curated skills`);
+
+writeFileSync(OUT, JSON.stringify({ version: 2, generatedAt: new Date().toISOString(), packages }, null, 2) + '\n');
+const installable = packages.filter((p) => p.skills.length > 0);
+console.log(`${packages.length} packages (${installable.length} installable, ${installable.reduce((n, p) => n + p.skills.length, 0)} skills) → ${OUT}`);

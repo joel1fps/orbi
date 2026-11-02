@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  aggregateStatus,
   alsoVisibleTo,
   isSafeRelPath,
   isScript,
@@ -101,4 +102,13 @@ test('shared folders: who else sees an install, and which picks are redundant', 
   assert.deepEqual(alsoVisibleTo('antigravity'), []);
   assert.deepEqual(redundantTargets(['claude', 'cursor']), ['cursor']);
   assert.deepEqual(redundantTargets(['claude', 'codex']), []);
+});
+
+test('a package status in one agent sums up its folders', () => {
+  assert.equal(aggregateStatus(['new', 'new']), 'new');
+  assert.equal(aggregateStatus(['same', 'same']), 'same');
+  assert.equal(aggregateStatus(['same', 'new']), 'update');
+  assert.equal(aggregateStatus(['update', 'same']), 'update');
+  assert.equal(aggregateStatus(['new', 'modified']), 'modified');
+  assert.equal(aggregateStatus(['modified', 'conflict', 'new']), 'conflict');
 });
