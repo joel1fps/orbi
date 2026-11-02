@@ -13,6 +13,7 @@ import {
   applyAntigravityTranscriptLine,
   cleanUserPrompt,
   createAgyTracker,
+  parseHubFile,
   type AgySessionTracker,
   type AgyTranscriptLine,
 } from './antigravityTranscript';
@@ -555,6 +556,47 @@ function getUserStatus(ep: Endpoint): Promise<AntigravityStatus | null> {
   });
 }
 
+const pidAlive = (pid: number) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** Antigravity 2.0: endpoints of the running `agy --hub` daemons, newest first (HTTP, then HTTPS). */
+async function discoverHub(): Promise<Endpoint[]> {
+  const out: Endpoint[] = [];
+  for (const app of ['antigravity', 'antigravity-cli']) {
+    const dir = join(geminiRoot(), app, 'daemon');
+    let names: string[];
+    try {
+      names = (await fs.readdir(dir)).filter((n) => /^hub_\d+\.json$/.test(n));
+    } catch {
+      continue;
+    }
+    const hubs = await Promise.all(
+      names.map(async (n) => {
+        try {
+          const p = join(dir, n);
+          const [st, text] = await Promise.all([fs.stat(p), fs.readFile(p, 'utf8')]);
+          return { info: parseHubFile(text), at: st.mtimeMs };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    for (const h of hubs.filter((x) => x?.info).sort((a, b) => b!.at - a!.at)) {
+      const info = h!.info!;
+      if (!pidAlive(info.pid)) continue; // old daemons leave their file behind
+      out.push({ port: info.httpPort, csrf: info.csrf, secure: false });
+      if (info.httpsPort) out.push({ port: info.httpsPort, csrf: info.csrf, secure: true });
+    }
+  }
+  return out;
+}
+
 const hasAntigravity2 = () =>
   existsSync(join(geminiRoot(), 'antigravity')) ||
   existsSync(join(geminiRoot(), 'antigravity-cli')) ||
@@ -569,19 +611,32 @@ export async function refreshAntigravity(): Promise<void> {
   if (!status) {
     endpoint = null;
     if (!v2 && !hasLegacyDir) return;
+    // Antigravity 2.0: the agy hub daemon publishes its endpoint in ~/.gemini/antigravity/daemon.
+    for (const ep of v2 ? await discoverHub() : []) {
+      status = await getUserStatus(ep);
+      if (status) {
+        endpoint = ep;
+        discoveredAt = Date.now();
+        break;
+      }
+    }
+  }
+  if (!status) {
     const running = await maybeLegacyServerRunning();
     if (!running) {
-      // Antigravity 2.0 no longer spawns `language_server`; avoid false "Antigravity is closed" notes.
-      if (v2) hub.setLimitNote('antigravity', undefined);
-      else hub.setLimitNote('antigravity', 'O Antigravity está fechado. Clique em Abrir Antigravity: o Orbi lê a cota de cada modelo pela API local dele.');
+      hub.setLimitNote(
+        'antigravity',
+        v2
+          ? 'O Antigravity está fechado. Abra o Antigravity: o Orbi lê a cota de cada modelo pela API local dele.'
+          : 'O Antigravity está fechado. Clique em Abrir Antigravity: o Orbi lê a cota de cada modelo pela API local dele.',
+      );
       return;
     }
     if (process.platform !== 'win32' && Date.now() - lastEmptyDiscovery < 3 * 60_000) return;
     const servers = await discover();
     if (servers.length === 0) {
       lastEmptyDiscovery = Date.now();
-      if (v2) hub.setLimitNote('antigravity', undefined);
-      else hub.setLimitNote('antigravity', 'O Antigravity está fechado. Clique em Abrir Antigravity: o Orbi lê a cota de cada modelo pela API local dele.');
+      hub.setLimitNote('antigravity', 'O Antigravity está fechado. Abra o Antigravity: o Orbi lê a cota de cada modelo pela API local dele.');
       return;
     }
     outer: for (const server of servers) {
@@ -599,7 +654,7 @@ export async function refreshAntigravity(): Promise<void> {
     }
   }
   if (!status) {
-    if (!v2) hub.setLimitNote('antigravity', 'O Antigravity está aberto, mas não respondeu. Atualize-o ou reabra-o.');
+    hub.setLimitNote('antigravity', 'O Antigravity está aberto, mas não respondeu. Atualize-o ou reabra-o.');
     return;
   }
   const models = antigravityQuotas(status);

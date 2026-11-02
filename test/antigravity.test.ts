@@ -10,6 +10,7 @@ import {
   withAntigravityHooks,
   type AntigravityHooksDoc,
 } from '../src/main/bridge/antigravityHookSettings.ts';
+import { parseHubFile } from '../src/main/integrations/antigravityTranscript.ts';
 import {
   applyAntigravityTranscriptLine,
   cleanAntigravityArg,
@@ -148,3 +149,11 @@ test('Antigravity transcript: tracks start, parallel tool steps, errors, questio
   assert.equal(tracker.summary, 'O motivo é que o Antigravity atualizou para a versão 2.0.');
 });
 
+
+test('Antigravity 2.0 hub file: ports and CSRF token of the agy daemon', () => {
+  const ok = parseHubFile('{"pid":21252,"httpsPort":59839,"httpPort":59837,"lsVersion":"2.28.2","csrfToken":"abc-123"}');
+  assert.deepEqual(ok, { pid: 21252, httpPort: 59837, httpsPort: 59839, csrf: 'abc-123' });
+  assert.equal(parseHubFile('{"pid":1,"httpPort":"x","csrfToken":"t"}'), null);
+  assert.equal(parseHubFile('{"pid":1,"httpPort":5,"httpsPort":6}'), null, 'no token, no call');
+  assert.equal(parseHubFile('not json'), null);
+});

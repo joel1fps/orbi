@@ -10,7 +10,7 @@ Regra geral: o Orbi nunca inventa número. Sem fonte, a pílula mostra "—" e o
 | --- | --- | --- | --- | --- | --- | --- |
 | **Claude** | `GET api.anthropic.com/api/oauth/usage`, a mesma consulta do `/usage` do Claude Code, com o login local do Claude Code | Ter entrado no Claude Code com uma conta Pro ou Max (o app desktop também serve) | `~/.claude/.credentials.json` | Keychain, item "Claude Code-credentials" (o macOS pede permissão uma vez) | `~/.claude/.credentials.json` | Sim, Windows, conta Pro: 5 h e semana batem com a conta |
 | **Codex** | `rate_limits` gravado nas sessões em `~/.codex/sessions` (ou `$CODEX_HOME`) | Ter usado o Codex (CLI, app ou extensão) ao menos uma vez | Sim | Sim | Sim | Sim, plano Plus, 5 h e semana |
-| **Antigravity** | API local do language server do Antigravity (`GetUserStatus` em 127.0.0.1), a mesma que a janela dele usa | Antigravity aberto | PowerShell + `Get-NetTCPConnection` | `ps` + `lsof` | `ps` + `lsof` ou `ss` | Sim, Windows, plano Pro, cota por modelo |
+| **Antigravity** | API local do language server do Antigravity (`GetUserStatus` em 127.0.0.1), a mesma que a janela dele usa. No 2.0, o endereço e o token vêm do daemon `agy --hub` (`~/.gemini/antigravity/daemon/hub_<porta>.json`) | Antigravity aberto | PowerShell + `Get-NetTCPConnection` | `ps` + `lsof` | `ps` + `lsof` ou `ss` | Sim, Windows, plano Pro, cota por modelo |
 | **Gemini CLI** | Code Assist `loadCodeAssist` + `retrieveUserQuota`, com o login Google do CLI (`~/.gemini/oauth_creds.json`) | Gemini CLI com login pessoal do Google | Sim | Sim | Sim | **Não**: o Gemini CLI não está instalado nesta máquina. Implementado a partir da abordagem documentada pelo CodexBar; leitura coberta por teste unitário |
 
 ### O que acontece quando falta algo

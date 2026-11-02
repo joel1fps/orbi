@@ -308,3 +308,22 @@ export function applyAntigravityTranscriptLine(t: AgySessionTracker, l: AgyTrans
 
   return { changed: false, touchedPaths };
 }
+
+/**
+ * Antigravity 2.0 runs a hub daemon (`agy --hub`) that writes
+ * ~/.gemini/antigravity/daemon/hub_<port>.json with its local ports and CSRF
+ * token; its language server answers GetUserStatus like 1.x did.
+ */
+export function parseHubFile(text: string): { pid: number; httpPort: number; httpsPort?: number; csrf: string } | null {
+  try {
+    const h = JSON.parse(text) as Record<string, unknown>;
+    const port = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v > 0 && v < 65536 ? v : undefined);
+    const pid = typeof h.pid === 'number' ? h.pid : NaN;
+    const httpPort = port(h.httpPort);
+    const csrf = typeof h.csrfToken === 'string' ? h.csrfToken : '';
+    if (!Number.isInteger(pid) || !httpPort || !csrf) return null;
+    return { pid, httpPort, httpsPort: port(h.httpsPort), csrf };
+  } catch {
+    return null;
+  }
+}
