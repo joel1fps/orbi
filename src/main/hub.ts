@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { appendStep, stepKind } from '@shared/steps';
+import { appendStep, isTextPath, stepKind } from '@shared/steps';
 import { BUILTIN_TOOLS, ago } from '@shared/tools';
 import type {
   AgentSession,
@@ -77,7 +77,13 @@ class Hub {
     return this.sessions.get(id);
   }
 
-  upsertSession(id: string, patch: Partial<AgentSession> & Pick<AgentSession, 'tool' | 'source'>): AgentSession {
+  upsertSession(id: string, input: Partial<AgentSession> & Pick<AgentSession, 'tool' | 'source'>): AgentSession {
+    // An image or other binary never becomes the live window's focus: the last text file stays.
+    const patch = { ...input };
+    if (patch.file && !isTextPath(patch.file)) {
+      delete patch.file;
+      delete patch.fileHint;
+    }
     const now = Date.now();
     const prev = this.sessions.get(id);
     const next: AgentSession = {
@@ -113,8 +119,17 @@ class Hub {
   private prune() {
     const now = Date.now();
     let dirty = false;
+    // The newest session of each agent stays, so every agent keeps a card in the panel.
+    const newest = new Map<string, AgentSession>();
+    for (const s of this.sessions.values()) {
+      if (s.simulated) continue;
+      const cur = newest.get(s.tool);
+      if (!cur || s.updatedAt > cur.updatedAt) newest.set(s.tool, s);
+    }
+    const keep = new Set([...newest.values()].map((s) => s.id));
     for (const [id, s] of this.sessions) {
       const age = now - s.updatedAt;
+      if (keep.has(id) && s.state !== 'working' && s.state !== 'waiting') continue;
       if ((s.state === 'working' || s.state === 'waiting') && age > STALE_WORKING_MS) {
         s.state = 'idle';
         s.current = 'Sem atividade recente';

@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { basename, truncate } from '@shared/tools';
-import { appendStep, stepKind } from '@shared/steps';
+import { appendStep, isTextPath, stepKind } from '@shared/steps';
 import type { PermissionDecision, SessionStep } from '@shared/types';
 import { hub } from '../hub';
 import { refreshClaudeUsageSoon } from './claudeUsage';
@@ -180,10 +180,14 @@ interface Watched {
   mtime: number;
   size: number;
   state?: string;
+  /** Last file a tool touched, kept once it scrolls out of the tail read (live session window). */
+  file?: string;
+  fileHint?: string;
 }
 
 const HOT_WINDOW_MS = 30 * 60_000;
 const TAIL_BYTES = 96 * 1024;
+const FIRST_TAIL_BYTES = 1024 * 1024;
 const watched = new Map<string, Watched>();
 let started = false;
 
@@ -253,7 +257,9 @@ async function inspect(path: string, mtime: number, size: number, silent: boolea
   // Hooks are richer and authoritative while they are flowing for this session.
   if (ended.has(id) || Date.now() - (lastHookAt.get(id) ?? 0) < 90_000) return;
 
-  const text = await readRange(path, Math.max(0, size - TAIL_BYTES), size);
+  // The first look reads further back, so the live window starts with the last file touched.
+  const tail = silent ? FIRST_TAIL_BYTES : TAIL_BYTES;
+  const text = await readRange(path, Math.max(0, size - tail), size);
   const entries = parseLines<TranscriptEntry>(text).filter((e) => !e.isSidechain && (e.type === 'user' || e.type === 'assistant'));
   if (entries.length === 0) return;
   const cwd = [...entries].reverse().find((e) => e.cwd)?.cwd;
@@ -279,7 +285,7 @@ async function inspect(path: string, mtime: number, size: number, silent: boolea
         toolNames.set(String(c.id), { name: String(c.name), input: c.input });
         const d = describeClaudeTool(String(c.name), c.input);
         trail = appendStep(trail, { kind: stepKind(d.label, d.code), label: d.label, code: d.code, file: d.file, at: Date.parse(e.timestamp ?? '') || mtime });
-        if (d.file) {
+        if (d.file && isTextPath(d.file)) {
           file = d.file;
           fileHint = d.hint;
         }
@@ -314,6 +320,14 @@ async function inspect(path: string, mtime: number, size: number, silent: boolea
   } else {
     state = 'working';
     current = lastContent.some((c) => c.type === 'tool_result') ? 'Analisando resultado' : 'Pensando…';
+  }
+
+  if (file) {
+    w.file = file;
+    w.fileHint = fileHint;
+  } else {
+    file = w.file;
+    fileHint = w.fileHint;
   }
 
   const prevState = w.state;

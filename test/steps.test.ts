@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { appendStep, focusLines, stepKind } from '../src/shared/steps.ts';
+import { appendStep, focusLines, isTextPath, stepKind } from '../src/shared/steps.ts';
 
 test('step kinds come from the labels every integration already produces', () => {
   assert.equal(stepKind('Lendo invoice.ts'), 'read');
@@ -38,4 +38,13 @@ test('the code view centres on the edited text', () => {
   assert.equal(top.start, 1);
   assert.deepEqual(top.highlight, []);
   assert.deepEqual(focusLines(text, 'não existe', 4).highlight, []);
+});
+
+test('only text files become the live window focus', () => {
+  assert.equal(isTextPath('C:\\proj\\src\\a.ts'), true);
+  assert.equal(isTextPath('/proj/README.md'), true);
+  assert.equal(isTextPath('Makefile'), true);
+  assert.equal(isTextPath('C:\\shots\\live.png'), false);
+  assert.equal(isTextPath('doc.PDF'), false);
+  assert.equal(isTextPath('app.exe'), false);
 });

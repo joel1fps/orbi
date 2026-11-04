@@ -4,6 +4,7 @@ import { BUILTIN_TOOLS, isBuiltin } from '@shared/tools';
 import type { SessionFileView, StepKind } from '@shared/types';
 import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
+import { AgentTabs, useAgentView } from './agents';
 
 /**
  * Live session window: what the agent is doing, step by step, next to the
@@ -26,11 +27,8 @@ const STEP_ICON: Record<StepKind, (s: number) => ReactNode> = {
 const SHOWN_STEPS = 7;
 
 export function LiveSession() {
-  const sessions = useApp((s) => s.hub.sessions);
-  const index = useApp((s) => s.sessionIndex);
-  const setIndex = useApp((s) => s.setSessionIndex);
+  const { current, sessions, session: s, i, setIndex } = useAgentView();
   const setTab = useApp((s) => s.setTab);
-  const s = sessions.length ? sessions[Math.min(index, sessions.length - 1)] : undefined;
   const [file, setFile] = useState<SessionFileView | null>(null);
 
   // Re-read the file whenever the agent touches it again.
@@ -51,8 +49,9 @@ export function LiveSession() {
   if (!s) {
     return (
       <div className="live__empty">
+        <AgentTabs />
         <Mascot size={72} interactive />
-        <div>Nenhuma sessão de agente para acompanhar agora.</div>
+        <div>{current ? `O ${BUILTIN_TOOLS[current].name} não tem sessão recente para acompanhar.` : 'Nenhuma sessão de agente para acompanhar agora.'}</div>
         <button className="btn" onClick={() => setTab('home')}>
           Voltar
         </button>
@@ -63,7 +62,6 @@ export function LiveSession() {
   const tool = isBuiltin(s.tool) ? BUILTIN_TOOLS[s.tool] : { name: 'Ferramenta', color: '#91aa9b' };
   const trail = (s.trail ?? []).slice(-SHOWN_STEPS);
   const working = s.state === 'working' || s.state === 'waiting';
-  const i = Math.min(index, sessions.length - 1);
 
   return (
     <div className="live__body">
@@ -71,6 +69,7 @@ export function LiveSession() {
         <button className="btn btn--ghost live__back" onClick={() => setTab('home')}>
           <ChevronLeft size={14} /> Início
         </button>
+        <AgentTabs compact />
         <Mascot size={64} interactive />
         <div className="live__project">{s.project}</div>
         <div className="live__tool" style={{ color: tool.color }}>

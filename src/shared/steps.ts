@@ -47,3 +47,10 @@ export function focusLines(text: string, hint: string | undefined, context = 6):
   const end = Math.min(all.length, from + count + context);
   return { start: begin + 1, lines: all.slice(begin, end), highlight: Array.from({ length: count }, (_, i) => from + 1 + i) };
 }
+
+const BINARY = /\.(png|jpe?g|gif|webp|bmp|ico|svgz|avif|tiff?|pdf|zip|gz|tgz|7z|rar|exe|dll|so|dylib|bin|wasm|mp[34]|mov|wav|ogg|webm|woff2?|ttf|otf|psd|sqlite|db|pb)$/i;
+
+/** Whether a touched file can be the live window's code view (images, PDFs and binaries cannot). */
+export function isTextPath(path: string): boolean {
+  return !BINARY.test(path);
+}

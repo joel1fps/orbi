@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { CursorInfo, HubState, IdleLevel, MainCommand, OrbiEvent, PanelTab, PlanTool, Settings, ViewMode } from '@shared/types';
+import type { CursorInfo, HubState, IdleLevel, MainCommand, OrbiEvent, PanelTab, PlanTool, Settings, ToolId, ViewMode } from '@shared/types';
 import { canReplace, REACTIONS, type ReactionKind } from './mascot/state';
 
 export type { ReactionKind } from './mascot/state';
@@ -18,6 +18,8 @@ interface AppState {
   tab: PanelTab;
   detail: DetailSlot;
   sessionIndex: number;
+  /** Agent whose session the card and the live window show; 'auto' follows the latest activity. */
+  agent: 'auto' | ToolId;
   settings: Settings;
   hub: HubState;
   docked: boolean;
@@ -31,6 +33,7 @@ interface AppState {
   setTab: (t: PanelTab) => void;
   setDetail: (d: DetailSlot) => void;
   setSessionIndex: (i: number) => void;
+  setAgent: (a: 'auto' | ToolId) => void;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
   /** Plays a reaction unless a more important one is still on; events wait their turn. */
   react: (kind: ReactionKind) => void;
@@ -48,6 +51,7 @@ export const useApp = create<AppState>()((set, get) => ({
   tab: 'home',
   detail: { type: 'session' },
   sessionIndex: 0,
+  agent: 'auto',
   settings: null as unknown as Settings,
   hub: null as unknown as HubState,
   docked: true,
@@ -66,6 +70,7 @@ export const useApp = create<AppState>()((set, get) => ({
   setTab: (tab) => set({ tab, view: 'panel' }),
   setDetail: (detail) => set({ detail }),
   setSessionIndex: (sessionIndex) => set({ sessionIndex }),
+  setAgent: (agent) => set({ agent, sessionIndex: 0 }),
   updateSettings: async (patch) => {
     set({ settings: { ...get().settings, ...patch } });
     const next = await window.orbi.updateSettings(patch);

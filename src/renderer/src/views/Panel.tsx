@@ -8,6 +8,7 @@ import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
 import { PermissionCard } from './PermissionCard';
 import { ArsenalSheet } from './Arsenal';
+import { AgentTabs, useAgentView } from './agents';
 import { LiveSession } from './Live';
 import { SettingsSheet } from './Settings';
 import { ToolsSheet } from './Tools';
@@ -118,28 +119,30 @@ const STATE_TEXT: Record<AgentSession['state'], string> = {
 };
 
 function SessionDetail() {
-  const sessions = useApp((s) => s.hub.sessions);
-  const index = useApp((s) => s.sessionIndex);
-  const setIndex = useApp((s) => s.setSessionIndex);
+  const { current, sessions, session, i, setIndex, status } = useAgentView();
   const setTab = useApp((s) => s.setTab);
 
-  if (sessions.length === 0) {
+  if (!session) {
+    const name = current ? BUILTIN_TOOLS[current].name : 'Nenhum agente';
     return (
       <div className="hero">
         <div className="hero__glow" style={{ ['--glow' as string]: 'rgba(79, 183, 162, 0.16)' }} />
         <Mascot size={96} interactive />
         <div className="hero__info">
-          <div className="hero__now">Nenhum agente trabalhando agora</div>
-          <div className="hero__summary">
-            O Orbi acompanha o Claude Code, o Codex e o Antigravity neste computador e reage quando uma tarefa começa, termina ou precisa de você.
+          <AgentTabs />
+          <div className="hero__now">{current ? `${name} sem sessão recente` : 'Nenhum agente trabalhando agora'}</div>
+          <div className="hero__summary hero__summary--full">
+            {status?.lastActivityAt ? `Última atividade ${ago(status.lastActivityAt)}. ` : ''}
+            {current
+              ? `Quando o ${name} começar uma tarefa, ela aparece aqui, e o botão Ao vivo mostra cada passo e o arquivo que ele mexer.`
+              : 'O Orbi acompanha o Claude Code, o Codex e o Antigravity neste computador e reage quando uma tarefa começa, termina ou precisa de você.'}
           </div>
         </div>
       </div>
     );
   }
 
-  const i = Math.min(index, sessions.length - 1);
-  const s = sessions[i];
+  const s = session;
   const tool = isBuiltin(s.tool) ? BUILTIN_TOOLS[s.tool] : { name: 'Ferramenta', color: '#91aa9b' };
   const glow =
     s.state === 'done' ? 'rgba(87, 201, 147, 0.26)' : s.state === 'error' ? 'rgba(242, 116, 121, 0.26)' : s.state === 'working' ? 'rgba(79, 183, 162, 0.22)' : 'rgba(79, 183, 162, 0.1)';
@@ -149,6 +152,7 @@ function SessionDetail() {
       <div className="hero__glow" style={{ ['--glow' as string]: glow }} />
       <Mascot size={96} interactive />
       <div className="hero__info">
+        <AgentTabs />
         <div className="hero__top">
           <span className={`dot${s.state === 'working' ? ' dot--live' : ''}`} style={{ background: tool.color, color: tool.color }} />
           <span className="hero__project">{s.project}</span>

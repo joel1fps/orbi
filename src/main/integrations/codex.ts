@@ -1,9 +1,10 @@
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { basename, truncate } from '@shared/tools';
 import { hub } from '../hub';
 import { refreshCodexUsageSoon } from './codexUsage';
+import { codexPatchTarget } from './codexPatch';
 import { describeCodexCall } from './describe';
 import { parseLines, readBytes, readRange } from './files';
 import { codexWindows, isPlanLimit, type CodexRateLimits } from './limits';
@@ -150,9 +151,19 @@ function handleLine(f: FileState, l: RolloutLine, silent: boolean) {
       break;
     case 'custom_tool_call':
     case 'function_call': {
-      const d = describeCodexCall(String(p.name ?? ''), typeof p.input === 'string' ? p.input : typeof p.arguments === 'string' ? p.arguments : undefined);
+      const raw = typeof p.input === 'string' ? p.input : typeof p.arguments === 'string' ? p.arguments : undefined;
+      const d = describeCodexCall(String(p.name ?? ''), raw);
       const waiting = p.name === 'request_user_input_async';
-      hub.upsertSession(id, { ...base, state: waiting ? 'waiting' : 'working', current: d.label, currentCode: d.code });
+      // Live session window: the file a patch touches, even inside an exec call.
+      const patch = codexPatchTarget(raw);
+      const file = patch && (isAbsolute(patch.file) ? patch.file : f.cwd ? resolve(f.cwd, patch.file) : undefined);
+      hub.upsertSession(id, {
+        ...base,
+        state: waiting ? 'waiting' : 'working',
+        current: patch ? `Editando ${basename(patch.file)}` : d.label,
+        currentCode: d.code,
+        ...(file ? { file, fileHint: patch!.hint } : {}),
+      });
       break;
     }
     case 'item_completed': {
