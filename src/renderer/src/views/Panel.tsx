@@ -57,11 +57,8 @@ function UsagePills() {
   const detail = useApp((s) => s.detail);
   const setDetail = useApp((s) => s.setDetail);
   const now = useNow();
-  const shown = PLAN_TOOLS.filter((t) =>
-    t === 'antigravity'
-      ? usage.some((u) => u.tool === t)
-      : usage.some((u) => u.tool === t) || tools.find((x) => x.id === t)?.availability !== 'not-installed',
-  );
+  // Installed but no reading yet: the pill shows "—" and its card says why (e.g. Antigravity closed).
+  const shown = PLAN_TOOLS.filter((t) => usage.some((u) => u.tool === t) || tools.find((x) => x.id === t)?.availability !== 'not-installed');
   return (
     <>
       {shown.map((t) => {
