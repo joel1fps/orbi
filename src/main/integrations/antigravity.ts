@@ -509,6 +509,17 @@ async function discoverUnix(): Promise<Server[]> {
   return servers;
 }
 
+/** The Antigravity app (IDE / App 2.0) or its agy CLI is running, whether or not its agent service is up. */
+async function antigravityAppRunning(): Promise<boolean> {
+  const out =
+    process.platform === 'win32' ? await run('tasklist.exe', ['/NH', '/FO', 'CSV']) : await run('ps', ['-A', '-o', 'comm=']);
+  return /antigravity|"agy\.exe"|(^|\/)agy$/im.test(out);
+}
+
+const NOTE_CLOSED = 'O Antigravity está fechado. Abra o Antigravity: o Orbi lê a cota de cada modelo pela API local dele.';
+const NOTE_NO_AGENT =
+  'O Antigravity está aberto, mas o agente dele ainda não está ativo, e é ele que informa a cota. Ela aparece assim que o agente iniciar: abra o painel do agente ou mande uma mensagem.';
+
 async function maybeLegacyServerRunning(): Promise<boolean> {
   if (process.platform !== 'win32') return true;
   const out = await run('tasklist.exe', ['/FI', 'IMAGENAME eq language_server*', '/NH', '/FO', 'CSV']);
@@ -624,19 +635,17 @@ export async function refreshAntigravity(): Promise<void> {
   if (!status) {
     const running = await maybeLegacyServerRunning();
     if (!running) {
-      hub.setLimitNote(
-        'antigravity',
-        v2
-          ? 'O Antigravity está fechado. Abra o Antigravity: o Orbi lê a cota de cada modelo pela API local dele.'
-          : 'O Antigravity está fechado. Clique em Abrir Antigravity: o Orbi lê a cota de cada modelo pela API local dele.',
-      );
+      // 2.0 without a hub daemon: the app may still be open, with its agent service not started yet.
+      const open = v2 && (await antigravityAppRunning());
+      if (hub.antigravity.appOpen !== open) hub.setAntigravity({ appOpen: open });
+      hub.setLimitNote('antigravity', open ? NOTE_NO_AGENT : NOTE_CLOSED);
       return;
     }
     if (process.platform !== 'win32' && Date.now() - lastEmptyDiscovery < 3 * 60_000) return;
     const servers = await discover();
     if (servers.length === 0) {
       lastEmptyDiscovery = Date.now();
-      hub.setLimitNote('antigravity', 'O Antigravity está fechado. Abra o Antigravity: o Orbi lê a cota de cada modelo pela API local dele.');
+      hub.setLimitNote('antigravity', NOTE_CLOSED);
       return;
     }
     outer: for (const server of servers) {
@@ -663,6 +672,7 @@ export async function refreshAntigravity(): Promise<void> {
     hub.setLimitNote('antigravity', 'O Antigravity não informou cotas para os modelos desta conta.');
     return;
   }
+  if (!hub.antigravity.appOpen) hub.setAntigravity({ appOpen: true });
   hub.setUsage({
     tool: 'antigravity',
     plan: status.userStatus?.planStatus?.planInfo?.planName,

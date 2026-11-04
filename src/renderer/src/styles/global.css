@@ -396,6 +396,10 @@ button {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.hero__summary--full {
+  -webkit-line-clamp: unset;
+  display: block;
+}
 
 .hero__actions {
   display: flex;
@@ -1544,8 +1548,9 @@ button {
   display: block;
 }
 
+/* The reset column keeps room for "em 4h 59m"; the model name gives way first. */
 .meter-row--model > .meter-row {
-  grid-template-columns: 104px minmax(36px, 1fr) 36px minmax(0, max-content);
+  grid-template-columns: 88px minmax(24px, 1fr) 34px 84px;
 }
 
 .meter-row--noreset > .meter-row {

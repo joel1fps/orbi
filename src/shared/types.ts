@@ -152,6 +152,8 @@ export interface CodexBridgeState {
 }
 
 export interface AntigravityBridgeState {
+  /** The Antigravity app is running (its agent service may still be off). */
+  appOpen?: boolean;
   hooksInstalled: boolean;
   lastHookAt?: number;
   hooksPath: string;

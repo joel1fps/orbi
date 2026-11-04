@@ -253,6 +253,8 @@ function UsageDetail({ tool }: { tool: PlanTool }) {
   const tone = PLAN_TONE[tool];
   const limitNote = useApp((s) => s.hub.limitNotes?.[tool]);
   const noteText = limitNote ?? DEFAULT_NOTE[tool];
+  // Antigravity already open: offering to open it again would be noise.
+  const appOpen = useApp((s) => tool === 'antigravity' && Boolean(s.hub.antigravity.appOpen));
 
   if (!u) {
     // No real source yet: say how to get one instead of showing a number.
@@ -262,17 +264,17 @@ function UsageDetail({ tool }: { tool: PlanTool }) {
         <Mascot size={72} flat />
         <div className="hero__info" style={{ gap: 7 }}>
           <div className="hero__top">
-            <span className="dot" style={{ background: tone, opacity: 0.4 }} />
-            <span className="hero__project">Plano {PLAN_NAME[tool]}</span>
-            <span>sem dados ainda</span>
+            <span className="dot" style={{ background: tone, opacity: appOpen ? 1 : 0.4 }} />
+            <span className="hero__project">{tool === 'antigravity' ? PLAN_NAME[tool] : `Plano ${PLAN_NAME[tool]}`}</span>
+            <span className="hero__count">{appOpen ? 'aberto, sem cota ainda' : 'sem leitura'}</span>
           </div>
-          <div className="hero__summary">{noteText}</div>
+          <div className="hero__summary hero__summary--full">{noteText}</div>
           <div className="hero__actions">
             {tool === 'claude' && !accountUsage ? (
               <button className="btn btn--light" onClick={() => setTab('tools')}>
                 Ativar em Ferramentas
               </button>
-            ) : (
+            ) : appOpen ? null : (
               <ConnectButton tool={tool} />
             )}
             <button className="btn btn--ghost" onClick={() => setDetail({ type: 'session' })}>
