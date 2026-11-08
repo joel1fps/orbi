@@ -159,6 +159,63 @@ export interface CloneProgress {
   phase: string;
 }
 
+/**
+ * A project folder on this computer ("Locais"): not-git = never versioned,
+ * no-remote = git but not on GitHub, then changes to send, commits to push,
+ * news on GitHub to bring, or in sync.
+ */
+export type LocalState = 'not-git' | 'no-remote' | 'changes' | 'ahead' | 'behind' | 'clean';
+
+export interface LocalProject {
+  path: string;
+  name: string;
+  git: boolean;
+  branch?: string;
+  /** "owner/name" when origin is on GitHub. */
+  repo?: string;
+  /** origin is set but not on GitHub. */
+  otherRemote?: boolean;
+  changes: number;
+  ahead: number;
+  behind: number;
+  state: LocalState;
+  /** Last change to the folder (ms). */
+  updatedAt: number;
+  /** Added by hand in "Adicionar pasta…". */
+  added?: boolean;
+}
+
+export interface LocalFile {
+  path: string;
+  /** Git's two-letter status ("??" new, " M" changed, " D" deleted…); "A" when the folder is not a repository yet. */
+  status: string;
+  size: number;
+  /** Why it must not be sent (a key, an .env, a token inside it). */
+  secret?: string;
+  /** A secret by its name (.env, a key): it can stay on this PC through .gitignore. */
+  ignorable?: boolean;
+  big?: boolean;
+}
+
+/** What publishing or sending would put on GitHub, checked before anything is written. */
+export interface LocalReview {
+  path: string;
+  files: LocalFile[];
+  total: number;
+  truncated: boolean;
+  /** Anything here stops the send. */
+  blockers: string[];
+  warnings: string[];
+  /** The .gitignore Orbi will create (a folder published without one). */
+  gitignore?: string;
+}
+
+export interface LocalActionResult {
+  ok: boolean;
+  message: string;
+  url?: string;
+}
+
 export interface CloneResult {
   ok: boolean;
   message: string;
@@ -227,6 +284,8 @@ export interface Settings {
   permissionTimeoutSec: number;
   customTools: CustomTool[];
   githubRepo: string;
+  /** Folders added by hand to the "Locais" tab (besides Desktop and Documents). */
+  localFolders: string[];
   githubTokenSet: boolean;
   /** Read Claude plan limits from the account via the local Claude Code login. */
   claudeAccountUsage: boolean;

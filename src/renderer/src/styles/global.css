@@ -1837,3 +1837,19 @@ button {
     transform: translate(6px, -40px) scale(1.05);
   }
 }
+.gh__path {
+  -webkit-line-clamp: 2;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  overflow-wrap: anywhere;
+}
+.acard__foot .arsenal__tag {
+  margin-left: 0;
+  white-space: nowrap;
+}
+.acard__foot .gh__lang {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

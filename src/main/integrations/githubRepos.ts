@@ -21,9 +21,27 @@ const API = 'https://api.github.com';
 const CLONE_TIMEOUT_MS = 15 * 60_000;
 const cloning = new Set<string>();
 
-async function api(path: string, token: string | null): Promise<unknown> {
+/**
+ * The environment for a git run that talks to GitHub: never prompts, and
+ * carries the token only for this run — git reads it from the environment
+ * and does not save it in the repository.
+ */
+export function gitEnv(token?: string | null): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never' };
+  if (token) {
+    env.GIT_CONFIG_COUNT = '1';
+    env.GIT_CONFIG_KEY_0 = 'http.https://github.com/.extraheader';
+    env.GIT_CONFIG_VALUE_0 = `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString('base64')}`;
+  }
+  return env;
+}
+
+export async function api(path: string, token: string | null, init?: { method: string; body: unknown }): Promise<unknown> {
   const res = await fetch(`${API}${path}`, {
+    method: init?.method ?? 'GET',
+    body: init ? JSON.stringify(init.body) : undefined,
     headers: {
+      ...(init ? { 'content-type': 'application/json' } : {}),
       accept: 'application/vnd.github+json',
       'user-agent': 'orbi-desktop',
       'x-github-api-version': '2022-11-28',
@@ -32,9 +50,10 @@ async function api(path: string, token: string | null): Promise<unknown> {
     signal: AbortSignal.timeout(15_000),
   });
   if (res.status === 401) throw new Error('O token do GitHub foi recusado. Troque-o em Ferramentas.');
+  if (res.status === 403 && init) throw new Error('O login do GitHub não tem permissão para criar repositórios (precisa do escopo repo).');
   if (res.status === 403 || res.status === 429) throw new Error('Limite de consultas do GitHub atingido. Tente de novo em alguns minutos.');
-  if (res.status === 404) throw new Error('Não encontrado no GitHub.');
-  if (res.status === 422) throw new Error('Busca inválida.');
+  if (res.status === 404) throw new Error(init ? 'O login do GitHub não tem permissão para criar repositórios (precisa do escopo repo).' : 'Não encontrado no GitHub.');
+  if (res.status === 422) throw new Error(init ? 'Já existe um repositório com esse nome na sua conta.' : 'Busca inválida.');
   if (!res.ok) throw new Error(`O GitHub respondeu ${res.status}.`);
   return res.json();
 }
@@ -120,14 +139,7 @@ export async function cloneRepo(fullName: unknown, pick: unknown): Promise<Clone
   const dest = join(parent, name);
   if (existsSync(dest)) return { ok: false, message: `Já existe uma pasta ${name} em ${parent}. Nada foi alterado.`, path: dest };
 
-  const auth = await githubAuth();
-  const env: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
-  if (auth) {
-    // Only for this run: git reads it from the environment and does not save it in the clone.
-    env.GIT_CONFIG_COUNT = '1';
-    env.GIT_CONFIG_KEY_0 = 'http.https://github.com/.extraheader';
-    env.GIT_CONFIG_VALUE_0 = `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${auth.token}`).toString('base64')}`;
-  }
+  const env = gitEnv((await githubAuth())?.token);
 
   cloning.add(fullName);
   send('github:clone', { fullName, percent: 0, phase: 'Conectando' });

@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   permissionTimeoutSec: 60,
   customTools: [],
   githubRepo: '',
+  localFolders: [],
   claudeAccountUsage: true,
 };
 

@@ -1,9 +1,12 @@
 import { Check, ChevronLeft, Download, ExternalLink, FolderOpen, GitFork, Lock, RefreshCw, Search, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { ago } from '@shared/tools';
-import type { CloneProgress, CloneResult, GithubRepo, RepoListKind } from '@shared/types';
+import type { CloneProgress, CloneResult, GithubRepo, LocalProject, RepoListKind } from '@shared/types';
 import { Segmented } from '../components/ui';
 import { useApp } from '../store';
+import { LocalDetail, LocalList } from './Locals';
+
+type Kind = RepoListKind | 'local';
 
 /**
  * GitHub tab, next to the Arsenal: repositories as cards — yours, the ones
@@ -33,8 +36,9 @@ const LANG_COLOR: Record<string, string> = {
   Vue: '#41b883',
 };
 
-const PLACEHOLDER: Record<RepoListKind, string> = {
+const PLACEHOLDER: Record<Kind, string> = {
   mine: 'Filtrar meus repositórios…',
+  local: 'Filtrar os projetos deste PC…',
   starred: 'Filtrar os que você marcou com estrela…',
   user: 'Usuário do GitHub (ex.: torvalds) e Enter',
   search: 'Buscar projetos em todo o GitHub e Enter',
@@ -44,16 +48,20 @@ const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 
 
 export function GithubSheet() {
   const gh = useApp((s) => s.hub.github);
-  const [kind, setKind] = useState<RepoListKind>('mine');
+  const [kind, setKind] = useState<Kind>('mine');
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [repos, setRepos] = useState<GithubRepo[] | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<GithubRepo | null>(null);
+  const [openLocal, setOpenLocal] = useState<LocalProject | null>(null);
+  const [localKey, setLocalKey] = useState(0);
   const remote = kind === 'user' || kind === 'search';
+  const local = kind === 'local';
 
-  const load = async (k: RepoListKind, q: string) => {
+  const load = async (k: Kind, q: string) => {
+    if (k === 'local') return setLocalKey((n) => n + 1);
     setLoading(true);
     setError('');
     const r = await window.orbi.githubRepos(k, q);
@@ -63,6 +71,7 @@ export function GithubSheet() {
   };
   // "Meus" and "Estrelas" load at once; "De alguém" and "Explorar" wait for Enter.
   useEffect(() => {
+    if (local) return;
     if (!remote) void load(kind, '');
     else if (submitted) void load(kind, submitted);
     else setRepos([]);
@@ -75,6 +84,7 @@ export function GithubSheet() {
   );
 
   if (open) return <RepoDetail repo={open} onBack={() => setOpen(null)} />;
+  if (openLocal) return <LocalDetail project={openLocal} onBack={() => setOpenLocal(null)} onChanged={() => setLocalKey((n) => n + 1)} />;
 
   return (
     <div className="sheet__body">
@@ -105,23 +115,27 @@ export function GithubSheet() {
           value={kind}
           options={[
             { value: 'mine', label: 'Meus' },
+            { value: 'local', label: 'Locais' },
             { value: 'starred', label: 'Estrelas' },
             { value: 'user', label: 'De alguém' },
             { value: 'search', label: 'Explorar' },
           ]}
           onChange={(k) => (setKind(k), setQuery(''), setSubmitted(''), setRepos(null))}
         />
-        <span className="arsenal__count">
-          {gh?.ok ? `@${gh.login}` : ''} {repos ? `· ${shown.length} ${shown.length === 1 ? 'projeto' : 'projetos'}` : ''}
-        </span>
+        {!local ? (
+          <span className="arsenal__count">
+            {gh?.ok ? `@${gh.login}` : ''} {repos ? `· ${shown.length} ${shown.length === 1 ? 'projeto' : 'projetos'}` : ''}
+          </span>
+        ) : null}
       </div>
-      {error ? <div className="feedback arsenal__error">{error}</div> : null}
-      {repos === null || (loading && shown.length === 0) ? (
+      {local ? <LocalList query={query} onOpen={setOpenLocal} reloadKey={localKey} /> : null}
+      {!local && error ? <div className="feedback arsenal__error">{error}</div> : null}
+      {local ? null : repos === null || (loading && shown.length === 0) ? (
         <div className="arsenal__empty">Carregando…</div>
       ) : shown.length === 0 && !error ? (
         <div className="arsenal__empty">{remote && !submitted ? 'Digite e aperte Enter.' : 'Nenhum projeto.'}</div>
       ) : null}
-      <div className="arsenal__grid">
+      <div className="arsenal__grid" hidden={local}>
         {shown.map((r) => (
           <RepoCard key={r.fullName} r={r} showOwner={kind !== 'mine'} onOpen={() => setOpen(r)} />
         ))}

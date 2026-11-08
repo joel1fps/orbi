@@ -18,6 +18,7 @@ import { startDetection } from './integrations/detect';
 import { startGeminiQuota } from './integrations/geminiQuota';
 import { refreshGithub, startGithub } from './integrations/github';
 import { cloneRepo, githubFromGit, listRepos } from './integrations/githubRepos';
+import { addLocalFolder, ignoreSecrets, listLocal, publishLocal, pullLocal, removeLocalFolder, reviewLocal, sendLocal } from './integrations/localProjects';
 import { startDebugServer } from './debug';
 import { resource } from './resources';
 import { sessionFile } from './sessionFile';
@@ -222,7 +223,8 @@ function registerIpc() {
   ipcMain.on('widget:hide', () => hideWidget());
   ipcMain.on('widget:dock', () => dock());
   ipcMain.handle('settings:update', (_e, patch: Partial<Settings>) => {
-    const { githubTokenSet: _ignored, ...rest } = patch;
+    // Token and local folders only change through their own handlers (a dialog picks the folders).
+    const { githubTokenSet: _ignored, localFolders: _folders, ...rest } = patch;
     return applySettings(rest);
   });
   ipcMain.on('permission:respond', (_e, id: string, decision: PermissionDecision) => hub.resolvePermission(id, decision));
@@ -254,6 +256,14 @@ function registerIpc() {
     if (r.ok) await refreshGithub();
     return r;
   });
+  ipcMain.handle('local:list', () => listLocal());
+  ipcMain.handle('local:add', () => addLocalFolder());
+  ipcMain.on('local:remove', (_e, path: unknown) => removeLocalFolder(path));
+  ipcMain.handle('local:review', (_e, path: unknown) => reviewLocal(path));
+  ipcMain.handle('local:publish', (_e, path: unknown, opts: Record<string, unknown> | undefined) => publishLocal(path, opts ?? {}));
+  ipcMain.handle('local:send', (_e, path: unknown, message: unknown) => sendLocal(path, message));
+  ipcMain.handle('local:ignore', (_e, path: unknown) => ignoreSecrets(path));
+  ipcMain.handle('local:pull', (_e, path: unknown) => pullLocal(path));
   ipcMain.handle('github:repos', (_e, kind: unknown, query: unknown) => listRepos(kind, query));
   ipcMain.handle('github:clone', (_e, fullName: unknown, pick: unknown) => cloneRepo(fullName, pick));
   ipcMain.on('open:external', (_e, url: string) => {

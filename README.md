@@ -77,6 +77,16 @@ Para refazer o catálogo inteiro, incluindo itens novos do site (mantenedores): 
 
 Com o GitHub conectado (token em Ferramentas, o botão **Usar o login do Git**, que aproveita o login que o `git push` já usa, ou o GitHub CLI), aparece no painel a aba de projetos, ao lado do Arsenal: cartões com os seus repositórios (**Meus**), os que você marcou com estrela (**Estrelas**), os de uma pessoa (**De alguém**, pelo usuário) ou uma busca em todo o GitHub (**Explorar**). Abrir um cartão mostra o projeto e o botão **Puxar para a Área de Trabalho** (ou **Escolher pasta…**), que clona com o seu Git e mostra o progresso. O Orbi não executa nada do projeto; o token vai para o Git só durante o clone, pelo ambiente, e não fica gravado no `.git/config` do projeto. Uma pasta com o mesmo nome nunca é sobrescrita.
 
+### Locais: projetos deste PC
+
+O filtro **Locais** (logo depois de **Meus**) mostra os projetos Git da Área de Trabalho e de Documentos (até dois níveis) e as pastas que você incluir com **Adicionar pasta…** (qualquer pasta, mesmo sem Git). Cada cartão diz se o projeto está **fora do GitHub**, tem **alterações**, versões **para enviar**, **novidades no GitHub** ou está **em dia**.
+
+- **Publicar no GitHub**: nome, descrição e privado (marcado por padrão). O Orbi cria o repositório na sua conta, inicia o Git se preciso, cria um `.gitignore` quando a pasta não tem um, salva a primeira versão e envia.
+- **Enviar para o GitHub**: você escreve o que mudou; o Orbi salva a versão e envia. Se o GitHub tiver novidades, ele as traz antes, só quando isso não mistura versões; se misturaria, para e explica. Nunca força um envio nem reescreve o histórico.
+- **Trazer para este PC**: busca as novidades do GitHub, do mesmo jeito (só avanço simples).
+- Antes de qualquer envio, a lista exata do que sobe. Arquivos secretos pelo nome (`.env`, chaves `.pem`/`.key`, `id_rsa`, `credentials.json`…) bloqueiam o envio, com o botão **Colocar no .gitignore** para deixá-los só no PC; senhas, chaves e tokens dentro do código (GitHub, OpenAI, Anthropic, AWS, Google, Slack, Stripe, chaves privadas) também bloqueiam e precisam sair do código. Arquivos acima de 100 MB bloqueiam (o GitHub recusa); acima de 50 MB geram aviso.
+- Os scripts de verificação do próprio projeto (hooks do Git) rodam normalmente, como no terminal. O nome e o e-mail das versões são os do seu Git.
+
 ## Integrações e de onde vêm os dados
 
 Nada é estimado ou inventado. Sem fonte de dados, aparece "não instalado", "não conectado" ou nenhum número.
