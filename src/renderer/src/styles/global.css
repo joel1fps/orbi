@@ -1853,3 +1853,12 @@ button {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* Every scrolling area (code view, lists): thin, dark scrollbars, never the light system ones. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

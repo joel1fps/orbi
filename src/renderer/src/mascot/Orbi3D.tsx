@@ -341,8 +341,8 @@ function Creature(props: Orbi2DProps) {
     if (props.working && !still) {
       const beat = t * 6.5 * Math.PI;
       const pause = Math.sin(t * 0.9) > 0.82;
-      if (pawL.current) pawL.current.position.y = wy(72) + (pause ? 0 : Math.max(0, Math.sin(beat)) * 0.12);
-      if (pawR.current) pawR.current.position.y = wy(72) + (pause ? 0 : Math.max(0, Math.sin(beat + Math.PI)) * 0.12);
+      if (pawL.current) pawL.current.position.y = wy(76.5) + (pause ? 0 : Math.max(0, Math.sin(beat)) * 0.12);
+      if (pawR.current) pawR.current.position.y = wy(76.5) + (pause ? 0 : Math.max(0, Math.sin(beat + Math.PI)) * 0.12);
     }
     if (screenLight.current) screenLight.current.intensity = l * (2.2 + (still ? 0 : 0.5 * Math.sin(t * 7.3) * Math.sin(t * 2.1)));
   });
@@ -397,15 +397,15 @@ function Creature(props: Orbi2DProps) {
       {/* Notebook on the lap: the hinge is toward us, the screen faces Orbi and lights its face */}
       <group ref={laptop}>
         <pointLight ref={screenLight} position={[0, wy(70), 1.25]} color="#bff7ec" intensity={0} distance={3.2} decay={1.6} />
-        <mesh geometry={a.box} material={a.deck} position={[0, wy(101), 1.55]} scale={[3.3, 0.14, 1.25]} />
+        <mesh geometry={a.box} material={a.deck} position={[0, wy(101), 1.6]} scale={[2.9, 0.12, 1.1]} />
         <group position={[0, wy(100.5), 2.12]} rotation={[-0.2, 0, 0]}>
-          <mesh geometry={a.box} material={a.lid} position={[0, 0.72, 0]} scale={[2.75, 1.44, 0.08]} />
-          <mesh geometry={a.plane} material={a.screen} position={[0, 0.72, -0.045]} rotation={[0, Math.PI, 0]} scale={[2.55, 1.28, 1]} />
-          <mesh geometry={a.logoRing} material={a.aqua} position={[0, 0.72, 0.05]} />
-          <mesh geometry={a.sphere} material={a.sun} position={[0.17, 0.86, 0.06]} scale={0.06} />
+          <mesh geometry={a.box} material={a.lid} position={[0, 0.6, 0]} scale={[2.4, 1.2, 0.08]} />
+          <mesh geometry={a.plane} material={a.screen} position={[0, 0.6, -0.045]} rotation={[0, Math.PI, 0]} scale={[2.2, 1.05, 1]} />
+          <mesh geometry={a.logoRing} material={a.aqua} position={[0, 0.6, 0.05]} />
+          <mesh geometry={a.sphere} material={a.sun} position={[0.17, 0.74, 0.06]} scale={0.06} />
         </group>
-        <mesh ref={pawL} geometry={a.sphere} material={a.body} position={[wx(47), wy(72), 1.85]} scale={[0.3, 0.22, 0.26]} />
-        <mesh ref={pawR} geometry={a.sphere} material={a.body} position={[wx(73), wy(72), 1.85]} scale={[0.3, 0.22, 0.26]} />
+        <mesh ref={pawL} geometry={a.sphere} material={a.body} position={[wx(47), wy(76.5), 1.85]} scale={[0.3, 0.22, 0.26]} />
+        <mesh ref={pawR} geometry={a.sphere} material={a.body} position={[wx(73), wy(76.5), 1.85]} scale={[0.3, 0.22, 0.26]} />
       </group>
 
       {/* Orbital ring, tilted like the drawing: the front dips across the belly, the back rises behind the head */}

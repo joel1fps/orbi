@@ -604,7 +604,7 @@ export async function uninstallSkill(packageId: string, targetId: unknown): Prom
   }
   await writeLedger(ledger.filter((e) => !entries.includes(e)));
   const message = kept.length
-    ? `Removidos ${removed} arquivos. Ficaram ${kept.length} que foram editados ou criados por você: ${kept.slice(0, 5).join(', ')}${kept.length > 5 ? '…' : ''}`
+    ? `${removed === 1 ? "Removido 1 arquivo" : `Removidos ${removed} arquivos`}. ${kept.length === 1 ? "Ficou 1 que foi editado ou criado" : `Ficaram ${kept.length} que foram editados ou criados`} por você: ${kept.slice(0, 5).join(', ')}${kept.length > 5 ? '…' : ''}`
     : `Removido de ${SKILL_TARGETS[targetId].name}.`;
   return { ok: true, message, details: [{ targetId, ok: true, message }] };
 }

@@ -18,6 +18,8 @@ const STATE: Record<LocalState, { label: string; tone: '' | 'warn' | 'dim' | 'ok
   clean: { label: 'em dia', tone: 'ok' },
 };
 
+/** Git status in porcelain v2 uses '.' for "unchanged" (".M", "D."), '??' for new. */
+const STATUS_WORD = (s: string) => (s === 'C' ? '(versão salva) ' : s.includes('D') ? '(apagado) ' : s === '??' || s === 'A' || s.includes('A') ? '(novo) ' : s.includes('R') ? '(renomeado) ' : '');
 const kb = (n: number) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`);
 const repoNameFor = (folder: string) => folder.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+|[-.]+$/g, '').slice(0, 100) || 'projeto';
 
@@ -38,10 +40,16 @@ export function LocalList({ query, onOpen, reloadKey }: { query: string; onOpen:
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
 
+  const [checking, setChecking] = useState(false);
   const load = async () => {
     const r = await window.orbi.localList();
     setProjects(r.projects);
     setError(r.error ?? '');
+    // Then ask GitHub for news (git fetch), so "novidades no GitHub" shows up without opening each project.
+    setChecking(true);
+    const fresh = await window.orbi.localList(true);
+    setChecking(false);
+    setProjects(fresh.projects);
   };
   useEffect(() => {
     void load();
@@ -61,6 +69,7 @@ export function LocalList({ query, onOpen, reloadKey }: { query: string; onOpen:
       <div className="arsenal__bar">
         <span className="arsenal__count">
           {projects ? `${shown.length} ${shown.length === 1 ? 'projeto' : 'projetos'} da Área de Trabalho, Documentos e pastas adicionadas` : ''}
+          {checking ? ' · conferindo o GitHub…' : ''}
         </span>
         <button className="btn btn--ghost" style={{ marginLeft: 'auto' }} onClick={() => void add()}>
           <FolderPlus size={14} /> Adicionar pasta…
@@ -154,7 +163,7 @@ export function LocalDetail({ project: p, onBack, onChanged }: { project: LocalP
       <div className="arsenal__meta arsenal__origin">
         <span className="arsenal__path">{p.path}</span>
         {p.repo ? ` · ${p.repo}` : ''}
-        {p.updatedAt ? ` · mexido ${ago(p.updatedAt)}` : ''}
+        {p.updatedAt ? ` · ${p.git ? 'última versão salva' : 'mexida'} ${ago(p.updatedAt)}` : ''}
       </div>
       <div className="arsenal__actions" style={{ justifyContent: 'flex-start' }}>
         <button className="btn btn--ghost" onClick={() => window.orbi.openPath(p.path)}>
@@ -238,7 +247,7 @@ export function LocalDetail({ project: p, onBack, onChanged }: { project: LocalP
                   {review.files.map((f) => (
                     <div key={f.path} className={f.secret || f.big ? 'arsenal__file arsenal__file--script' : 'arsenal__file'}>
                       <span>
-                        {f.status === ' D' || f.status === 'D ' ? '(apagado) ' : ''}
+                        {STATUS_WORD(f.status)}
                         {f.path}
                       </span>
                       <span>{f.secret ? f.secret : kb(f.size)}</span>

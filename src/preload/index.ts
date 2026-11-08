@@ -73,7 +73,7 @@ const api = {
   skillsUninstall: (skillId: string, targetId: SkillTargetId): Promise<SkillActionResult> => ipcRenderer.invoke('skills:uninstall', skillId, targetId),
   skillsOpen: (targetId: SkillTargetId, name?: string) => ipcRenderer.send('skills:open', targetId, name),
   githubFromGit: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('github:from-git'),
-  localList: (): Promise<{ projects: LocalProject[]; error?: string }> => ipcRenderer.invoke('local:list'),
+  localList: (fetch = false): Promise<{ projects: LocalProject[]; error?: string }> => ipcRenderer.invoke('local:list', fetch),
   localAdd: (): Promise<{ ok: boolean; message?: string }> => ipcRenderer.invoke('local:add'),
   localRemove: (path: string) => ipcRenderer.send('local:remove', path),
   localReview: (path: string): Promise<LocalReview | { error: string }> => ipcRenderer.invoke('local:review', path),

@@ -76,6 +76,13 @@ const why = (r: GitRun) =>
     .slice(-2)
     .join(' ') || 'o git parou sem dizer o motivo.';
 
+/** The files git names in "would be overwritten" and similar errors (tab-indented lines). */
+const filesIn = (r: GitRun) =>
+  r.err
+    .split(/\r?\n/)
+    .filter((l) => l.startsWith('\t'))
+    .map((l) => l.trim());
+
 // ---------- listing ----------
 
 async function findRepos(dir: string, depth: number, out: string[]) {
@@ -103,15 +110,24 @@ async function describe(path: string, added: boolean): Promise<LocalProject | nu
   const isGit = existsSync(join(path, '.git'));
   let updatedAt = 0;
   try {
-    updatedAt = (await stat(isGit && existsSync(join(path, '.git', 'index')) ? join(path, '.git', 'index') : path)).mtimeMs;
+    updatedAt = (await stat(path)).mtimeMs;
   } catch {
     /* keep 0 */
   }
-  if (!isGit) return { path, name: basename(path), git: false, changes: 0, ahead: 0, behind: 0, state: 'not-git', updatedAt, added };
-  const [st, remote] = await Promise.all([
+  if (!isGit) {
+    // A folder inside another project is that project: publishing it alone would nest a second repository.
+    const top = await git(path, ['rev-parse', '--show-toplevel']);
+    if (top.code === 0 && top.out.trim() && key(top.out.trim()) !== key(path)) return describe(normalize(top.out.trim()), added);
+    return { path, name: basename(path), git: false, changes: 0, ahead: 0, behind: 0, state: 'not-git', updatedAt, added };
+  }
+  const [st, remote, last] = await Promise.all([
     git(path, ['status', '--porcelain=v2', '--branch', '-z']),
-    git(path, ['remote', 'get-url', 'origin']),
+    // The URL as written: get-url would apply insteadOf rewrites and hide that it is GitHub.
+    git(path, ['config', '--get', 'remote.origin.url']),
+    git(path, ['log', '-1', '--format=%ct']),
   ]);
+  // The last saved version is what "mexido há…" means for a project; the folder date when there is none yet.
+  if (last.code === 0 && Number(last.out.trim()) > 0) updatedAt = Number(last.out.trim()) * 1000;
   const s = parseStatus(st.out);
   const url = remote.code === 0 ? remote.out.trim() : '';
   const repo = githubRepoOf(url) ?? undefined;
@@ -128,8 +144,37 @@ async function describe(path: string, added: boolean): Promise<LocalProject | nu
   };
 }
 
-/** Desktop and Documents (two levels deep), plus the folders added by hand. */
-export async function listLocal(): Promise<{ projects: LocalProject[]; error?: string }> {
+const lastFetch = new Map<string, number>();
+const FETCH_EVERY_MS = 2 * 60_000;
+
+/**
+ * Asks GitHub what changed (git fetch, nothing in the folder moves), so a
+ * card can say "novidades no GitHub". Quiet: a project that can't be
+ * reached keeps its last known state.
+ */
+async function fetchAll(projects: LocalProject[]) {
+  const env = gitEnv((await githubAuth())?.token);
+  const due = projects.filter((p) => p.repo && Date.now() - (lastFetch.get(key(p.path)) ?? 0) > FETCH_EVERY_MS);
+  for (let i = 0; i < due.length; i += 6) {
+    await Promise.all(
+      due.slice(i, i + 6).map(async (p) => {
+        lastFetch.set(key(p.path), Date.now());
+        await git(p.path, ['fetch', '--quiet', 'origin'], { env, timeout: 20_000 });
+      }),
+    );
+  }
+  return due.length;
+}
+
+/**
+ * Desktop and Documents (two levels deep), plus the folders added by hand.
+ * With `fetch`, also asks GitHub for news first (the tab calls it right
+ * after the quick listing).
+ */
+export async function listLocal(fetch?: unknown): Promise<{ projects: LocalProject[]; error?: string }> {
+  if (fetch === true && known.size && (await fetchAll([...known.values()])) === 0) {
+    return { projects: [...known.values()] };
+  }
   const found: string[] = [];
   for (const root of [app.getPath('desktop'), app.getPath('documents')]) await findRepos(root, 2, found);
   const added = store.settings.localFolders.filter((f) => typeof f === 'string');
@@ -138,12 +183,14 @@ export async function listLocal(): Promise<{ projects: LocalProject[]; error?: s
   for (const p of added) paths.set(key(p), { path: p, added: true });
 
   const list = [...paths.values()];
-  const projects: LocalProject[] = [];
+  const byPath = new Map<string, LocalProject>();
   // A few git runs at a time: each one is quick, a hundred at once is not.
   for (let i = 0; i < list.length; i += 6) {
     const chunk = await Promise.all(list.slice(i, i + 6).map((x) => describe(x.path, x.added)));
-    for (const p of chunk) if (p) projects.push(p);
+    // A folder added from inside a project resolves to that project: keep one card.
+    for (const p of chunk) if (p && !byPath.has(key(p.path))) byPath.set(key(p.path), p);
   }
+  const projects = [...byPath.values()];
   projects.sort((a, b) => b.updatedAt - a.updatedAt);
   known = new Map(projects.map((p) => [key(p.path), p]));
   const error = (await whichCommand('git')) ? undefined : 'O Git não está instalado. Instale em git-scm.com para enviar projetos ao GitHub.';
@@ -160,7 +207,10 @@ export async function addLocalFolder(): Promise<{ ok: boolean; message?: string 
   const options = { title: 'Escolha a pasta do projeto', defaultPath: app.getPath('desktop'), properties: ['openDirectory'] as 'openDirectory'[] };
   const r = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
   if (r.canceled || !r.filePaths[0]) return { ok: false };
-  const p = resolve(r.filePaths[0]);
+  let p = resolve(r.filePaths[0]);
+  // A folder inside a project stands for the whole project.
+  const top = await git(p, ['rev-parse', '--show-toplevel']);
+  if (top.code === 0 && top.out.trim()) p = normalize(top.out.trim());
   if (key(p) === key(app.getPath('desktop')) || key(p) === key(app.getPath('home'))) {
     return { ok: false, message: 'Escolha a pasta do projeto, não a Área de Trabalho ou a pasta do usuário inteira.' };
   }
@@ -226,6 +276,10 @@ export async function reviewLocal(path: unknown): Promise<LocalReview | { error:
     const st = await git(p.path, ['status', '--porcelain=v2', '--branch', '-z', '--untracked-files=all']);
     if (st.code !== 0) return { error: `Não consegui ler o projeto: ${why(st)}` };
     entries = parseStatus(st.out).files;
+    // Versions saved here but not on GitHub yet go up too: their files are checked like the changes.
+    const unpushed = await git(p.path, ['log', '--format=', '--name-only', '-z', 'HEAD', '--not', '--remotes=origin']);
+    const seen = new Set(entries.map((e) => e.path));
+    for (const f of new Set(nulList(unpushed.out.replace(/\n/g, '\0')))) if (!seen.has(f)) entries.push({ path: f, status: 'C' });
   }
 
   const files: LocalFile[] = [];
@@ -241,12 +295,15 @@ export async function reviewLocal(path: unknown): Promise<LocalReview | { error:
       if (!s.isFile()) continue;
       size = s.size;
     } catch {
-      files.push({ path: e.path, status: e.status, size: 0 }); // deleted
+      // Gone from the folder. Inside an unsent version it still goes up, so its name is still checked.
+      const secret = e.status === 'C' ? (secretPathReason(e.path) ?? undefined) : undefined;
+      files.push({ path: e.path, status: e.status, size: 0, secret });
       continue;
     }
     const f: LocalFile = { path: e.path, status: e.status, size };
     f.secret = secretPathReason(e.path) ?? undefined;
-    if (f.secret) f.ignorable = true;
+    // A secret already inside a saved, unsent version can't be fixed by .gitignore.
+    if (f.secret && e.status !== 'C') f.ignorable = true;
     if (!f.secret && size <= TEXT_LIMIT) {
       if (scanned + size > SCAN_BYTES) partial = true;
       else {
@@ -265,8 +322,10 @@ export async function reviewLocal(path: unknown): Promise<LocalReview | { error:
   }
   const list = (fs: LocalFile[]) => `${fs.slice(0, 4).map((f) => `${f.path} (${f.secret})`).join(', ')}${fs.length > 4 ? '…' : ''}`;
   const byName = files.filter((f) => f.ignorable);
-  const inside = files.filter((f) => f.secret && !f.ignorable);
-  if (byName.length) blockers.push(`${byName.length === 1 ? 'Arquivo secreto' : `${byName.length} arquivos secretos`} na lista: ${list(byName)}. Coloque no .gitignore para que fiquem só neste PC.`);
+  const saved = files.filter((f) => f.secret && f.status === 'C');
+  const inside = files.filter((f) => f.secret && !f.ignorable && f.status !== 'C');
+  if (byName.length) blockers.push(`${byName.length === 1 ? 'Arquivo secreto' : `${byName.length} arquivos secretos`} na lista: ${list(byName)}. Coloque no .gitignore para que ${byName.length === 1 ? 'fique' : 'fiquem'} só neste PC.`);
+  if (saved.length) blockers.push(`Uma versão salva aqui e ainda não enviada traz ${list(saved)}. Desfaça essa versão no terminal (git reset HEAD~1, sem --hard) e salve de novo sem o segredo.`);
   if (inside.length) blockers.push(`${inside.length === 1 ? 'Há senha, chave ou token dentro de' : 'Há senhas, chaves ou tokens dentro de'} ${list(inside)}. Tire do código (use um .env) antes de enviar.`);
   const huge = files.filter((f) => f.size > MAX_FILE);
   if (huge.length) blockers.push(`O GitHub recusa arquivos acima de 100 MB: ${huge.map((f) => f.path).slice(0, 3).join(', ')}.`);
@@ -391,7 +450,15 @@ export async function sendLocal(path: unknown, message: unknown): Promise<LocalA
       return { ok: false, message: 'O GitHub e este PC têm versões diferentes do projeto. Junte as duas no terminal (git pull) e envie de novo; o Orbi não mistura versões sozinho.' };
     }
     const pull = await git(p.path, ['merge', '--ff-only', '@{upstream}'], { env });
-    if (pull.code !== 0) return { ok: false, message: `O GitHub tem novidades que mexem nos mesmos arquivos que você mudou. Traga-as no terminal antes: ${why(pull)}` };
+    if (pull.code !== 0) {
+      const clash = filesIn(pull);
+      return {
+        ok: false,
+        message: clash.length
+          ? `O GitHub tem novidades em ${clash.slice(0, 3).join(', ')}${clash.length > 3 ? '…' : ''}, que você também mudou aqui. Junte as duas versões no terminal (git stash, git pull, git stash pop) e envie de novo.`
+          : `Não deu para trazer as novidades do GitHub sem misturar versões: ${why(pull)}`,
+      };
+    }
     s = parseStatus((await git(p.path, ['status', '--porcelain=v2', '--branch', '-z'])).out);
   }
   const review = await reviewLocal(p.path);
@@ -418,6 +485,14 @@ export async function pullLocal(path: unknown): Promise<LocalActionResult> {
   const fetched = await git(p.path, ['fetch', 'origin'], { env, timeout: 5 * 60_000 });
   if (fetched.code !== 0) return { ok: false, message: `Não consegui falar com o GitHub: ${why(fetched)}` };
   const r = await git(p.path, ['merge', '--ff-only', '@{upstream}']);
-  if (r.code !== 0) return { ok: false, message: `Não deu para trazer sem misturar versões: ${why(r)} Resolva no terminal.` };
+  if (r.code !== 0) {
+    const clash = filesIn(r);
+    return {
+      ok: false,
+      message: clash.length
+        ? `O GitHub tem novidades em ${clash.slice(0, 3).join(', ')}${clash.length > 3 ? '…' : ''}, que você também mudou aqui. Junte no terminal (git stash, git pull, git stash pop).`
+        : `Não deu para trazer sem misturar versões: ${why(r)} Resolva no terminal (git pull).`,
+    };
+  }
   return { ok: true, message: 'Novidades do GitHub trazidas para este PC.' };
 }

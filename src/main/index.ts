@@ -256,7 +256,7 @@ function registerIpc() {
     if (r.ok) await refreshGithub();
     return r;
   });
-  ipcMain.handle('local:list', () => listLocal());
+  ipcMain.handle('local:list', (_e, fetch: unknown) => listLocal(fetch));
   ipcMain.handle('local:add', () => addLocalFolder());
   ipcMain.on('local:remove', (_e, path: unknown) => removeLocalFolder(path));
   ipcMain.handle('local:review', (_e, path: unknown) => reviewLocal(path));
