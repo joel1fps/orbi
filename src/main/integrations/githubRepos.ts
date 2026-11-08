@@ -1,13 +1,14 @@
 import { app, dialog } from 'electron';
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { CloneResult, GithubRepo, RepoList, RepoListKind } from '@shared/types';
-import { store } from '../store';
+import type { CloneResult, GithubPerson, GithubRepo, PeopleList, RepoList, RepoListKind, TopList } from '@shared/types';
+import { dataDir, store } from '../store';
 import { getWidget, send } from '../widget';
 import { whichCommand } from './detect';
 import { githubAuth } from './github';
-import { isLogin, isRepoName, parseCloneProgress, toRepo } from './githubRepoLogic';
+import { isFresh, isLogin, isRepoName, isTopLang, parseCloneProgress, toPerson, topSearchPath, toRepo, type TopLang } from './githubRepoLogic';
 
 /**
  * The GitHub tab: lists repositories through the REST API and clones one into
@@ -80,11 +81,86 @@ export async function listRepos(kind: unknown, query: unknown): Promise<RepoList
       const body = (await api(`/search/repositories?per_page=50&sort=stars&q=${encodeURIComponent(q)}`, token)) as { items?: unknown[] };
       raw = body.items ?? [];
     }
-    const repos = (Array.isArray(raw) ? raw : []).map((r) => toRepo(r as never)).filter((r): r is GithubRepo => r !== null);
-    return { repos };
+    return { repos: toRepos(raw) };
   } catch (err) {
-    const msg = (err as Error).message;
-    return { repos: [], error: /fetch failed|timeout|aborted/i.test(msg) ? 'Sem conexão com o GitHub.' : msg };
+    return { repos: [], error: netMessage(err) };
+  }
+}
+
+const toRepos = (raw: unknown) => (Array.isArray(raw) ? raw : []).map((r) => toRepo(r as never)).filter((r): r is GithubRepo => r !== null);
+
+function netMessage(err: unknown): string {
+  const msg = (err as Error).message;
+  return /fetch failed|timeout|aborted/i.test(msg) ? 'Sem conexão com o GitHub.' : msg;
+}
+
+/**
+ * "Top 10 da semana" in Explorar. Public data, asked for without the user's
+ * token so the search says nothing about who is looking. Kept per language
+ * in memory and in a small file, and asked for again only after TOP_TTL_MS
+ * (or on the refresh button), so the tab costs a few requests a day.
+ */
+type TopCache = Partial<Record<TopLang, { fetchedAt: number; repos: GithubRepo[] }>>;
+const topFile = () => join(dataDir(), 'github-top.json');
+let topCache: TopCache | null = null;
+const topLoading = new Map<TopLang, Promise<TopList>>();
+
+function readTopCache(): TopCache {
+  if (topCache) return topCache;
+  topCache = {};
+  try {
+    const raw = JSON.parse(readFileSync(topFile(), 'utf8')) as TopCache;
+    for (const [lang, hit] of Object.entries(raw ?? {})) {
+      if (isTopLang(lang) && hit && typeof hit.fetchedAt === 'number' && Array.isArray(hit.repos)) topCache[lang] = hit;
+    }
+  } catch {
+    // No list kept yet.
+  }
+  return topCache;
+}
+
+export function listTop(lang: unknown, force: unknown): Promise<TopList> {
+  const l: TopLang = isTopLang(lang) ? lang : '';
+  const cache = readTopCache();
+  const hit = cache[l];
+  if (force !== true && hit && isFresh(hit.fetchedAt, Date.now())) return Promise.resolve({ repos: hit.repos, fetchedAt: hit.fetchedAt });
+  const running = topLoading.get(l);
+  if (running) return running;
+  const job = (async (): Promise<TopList> => {
+    const now = Date.now();
+    try {
+      const body = (await api(topSearchPath(l, now), null)) as { items?: unknown[] };
+      const repos = toRepos(body.items).slice(0, 10);
+      cache[l] = { fetchedAt: now, repos };
+      await writeFile(topFile(), JSON.stringify(cache)).catch(() => undefined);
+      return { repos, fetchedAt: now };
+    } catch (err) {
+      const msg = netMessage(err);
+      return hit ? { repos: hit.repos, fetchedAt: hit.fetchedAt, error: `${msg} Mostrando a última lista guardada.` } : { repos: [], error: msg };
+    } finally {
+      topLoading.delete(l);
+    }
+  })();
+  topLoading.set(l, job);
+  return job;
+}
+
+/** The people the user follows, for "De alguém" before anything is typed. Needs the token. */
+let following: { at: number; token: string; people: GithubPerson[] } | null = null;
+const FOLLOWING_TTL_MS = 10 * 60_000;
+
+export async function listFollowing(force: unknown): Promise<PeopleList> {
+  const token = (await githubAuth())?.token;
+  // Kept per token, so connecting another account (or none) never shows the old list.
+  if (force !== true && token && following?.token === token && Date.now() - following.at < FOLLOWING_TTL_MS) return { people: following.people };
+  if (!token) return { people: [], error: 'Conecte o GitHub em Ferramentas para ver quem você segue.' };
+  try {
+    const raw = await api('/user/following?per_page=100', token);
+    const people = (Array.isArray(raw) ? raw : []).map((p) => toPerson(p as never)).filter((p): p is GithubPerson => p !== null);
+    following = { at: Date.now(), token, people };
+    return { people };
+  } catch (err) {
+    return { people: [], error: netMessage(err) };
   }
 }
 

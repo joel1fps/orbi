@@ -17,7 +17,7 @@ import { connectCodex, startCodexUsage } from './integrations/codexUsage';
 import { startDetection } from './integrations/detect';
 import { startGeminiQuota } from './integrations/geminiQuota';
 import { refreshGithub, startGithub } from './integrations/github';
-import { cloneRepo, githubFromGit, listRepos } from './integrations/githubRepos';
+import { cloneRepo, githubFromGit, listFollowing, listRepos, listTop } from './integrations/githubRepos';
 import { addLocalFolder, ignoreSecrets, listLocal, publishLocal, pullLocal, removeLocalFolder, reviewLocal, sendLocal } from './integrations/localProjects';
 import { startDebugServer } from './debug';
 import { resource } from './resources';
@@ -265,6 +265,8 @@ function registerIpc() {
   ipcMain.handle('local:ignore', (_e, path: unknown) => ignoreSecrets(path));
   ipcMain.handle('local:pull', (_e, path: unknown) => pullLocal(path));
   ipcMain.handle('github:repos', (_e, kind: unknown, query: unknown) => listRepos(kind, query));
+  ipcMain.handle('github:top', (_e, lang: unknown, force: unknown) => listTop(lang, force));
+  ipcMain.handle('github:following', (_e, force: unknown) => listFollowing(force));
   ipcMain.handle('github:clone', (_e, fullName: unknown, pick: unknown) => cloneRepo(fullName, pick));
   ipcMain.on('open:external', (_e, url: string) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);

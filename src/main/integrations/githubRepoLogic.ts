@@ -1,4 +1,4 @@
-import type { GithubRepo } from '@shared/types';
+import type { GithubPerson, GithubRepo } from '@shared/types';
 
 /**
  * The pure half of the GitHub tab (no I/O, unit-tested): which names are
@@ -78,4 +78,32 @@ export function parseCloneProgress(chunk: string): { percent: number; phase: str
     }
   }
   return out;
+}
+
+/** The language filters of "Top 10 da semana"; '' is every language. */
+export const TOP_LANGS = ['', 'Python', 'TypeScript', 'JavaScript', 'Rust', 'Go'] as const;
+export type TopLang = (typeof TOP_LANGS)[number];
+/** How long a fetched top list is shown before it is asked for again. */
+export const TOP_TTL_MS = 6 * 3_600_000;
+
+export function isTopLang(s: unknown): s is TopLang {
+  return typeof s === 'string' && (TOP_LANGS as readonly string[]).includes(s);
+}
+
+/**
+ * GitHub has no API for its Trending page, so "the week's top" is the public
+ * search for repositories created in the last 7 days with the most stars.
+ */
+export function topSearchPath(lang: TopLang, now: number): string {
+  const since = new Date(now - 7 * 86_400_000).toISOString().slice(0, 10);
+  const q = `created:>${since}${lang ? ` language:${lang}` : ''}`;
+  return `/search/repositories?per_page=10&sort=stars&order=desc&q=${encodeURIComponent(q)}`;
+}
+
+export const isFresh = (fetchedAt: number | undefined, now: number) => fetchedAt !== undefined && now - fetchedAt >= 0 && now - fetchedAt < TOP_TTL_MS;
+
+export function toPerson(p: { login?: string; avatar_url?: string }): GithubPerson | null {
+  if (!isLogin(p.login)) return null;
+  const avatar = p.avatar_url;
+  return { login: p.login, avatar: avatar && avatar.startsWith('https://avatars.githubusercontent.com/') ? avatar : undefined };
 }

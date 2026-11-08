@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isLogin, isRepoName, parseCloneProgress, toRepo } from '../src/main/integrations/githubRepoLogic.ts';
+import { isFresh, isLogin, isRepoName, isTopLang, parseCloneProgress, toPerson, TOP_TTL_MS, topSearchPath, toRepo } from '../src/main/integrations/githubRepoLogic.ts';
 
 test('only plain owner/name reaches git', () => {
   assert.equal(isRepoName('joel1fps/orbi'), true);
@@ -37,4 +37,32 @@ test('clone progress maps git phases onto one bar', () => {
   assert.deepEqual(parseCloneProgress('Counting objects: 100% (3/3)\rReceiving objects: 100% (10/10), done.\n'), { phase: 'Baixando', percent: 85 });
   assert.deepEqual(parseCloneProgress('Updating files: 100% (9/9), done.'), { phase: 'Gravando arquivos', percent: 100 });
   assert.equal(parseCloneProgress("Cloning into 'orbi'..."), null);
+});
+
+test('the week top asks for repositories created in the last 7 days, by stars', () => {
+  const now = Date.parse('2026-11-08T12:00:00Z');
+  const all = decodeURIComponent(topSearchPath('', now));
+  assert.match(all, /q=created:>2026-11-01$/);
+  assert.match(all, /per_page=10&sort=stars&order=desc/);
+  assert.match(decodeURIComponent(topSearchPath('Python', now)), /q=created:>2026-11-01 language:Python$/);
+  assert.equal(isTopLang('Rust'), true);
+  assert.equal(isTopLang('Rust language:Go'), false);
+  assert.equal(isTopLang(undefined), false);
+});
+
+test('a kept top list is fresh for a few hours, never from the future', () => {
+  const now = 1_000_000_000;
+  assert.equal(isFresh(now - 60_000, now), true);
+  assert.equal(isFresh(now - TOP_TTL_MS, now), false);
+  assert.equal(isFresh(now + 60_000, now), false);
+  assert.equal(isFresh(undefined, now), false);
+});
+
+test('people keep only a valid login and a GitHub avatar', () => {
+  assert.deepEqual(toPerson({ login: 'torvalds', avatar_url: 'https://avatars.githubusercontent.com/u/1024025?v=4' }), {
+    login: 'torvalds',
+    avatar: 'https://avatars.githubusercontent.com/u/1024025?v=4',
+  });
+  assert.equal(toPerson({ login: 'x', avatar_url: 'https://evil.example/a.png' })?.avatar, undefined);
+  assert.equal(toPerson({ login: '../etc' }), null);
 });

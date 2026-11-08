@@ -152,6 +152,22 @@ export interface RepoList {
   error?: string;
 }
 
+/** "Top 10 da semana": when it was fetched, so the page can say how old it is. */
+export interface TopList extends RepoList {
+  fetchedAt?: number;
+}
+
+/** Someone the user follows on GitHub ("De alguém" before a search). */
+export interface GithubPerson {
+  login: string;
+  avatar?: string;
+}
+
+export interface PeopleList {
+  people: GithubPerson[];
+  error?: string;
+}
+
 export interface CloneProgress {
   fullName: string;
   /** 0–100 while running. */

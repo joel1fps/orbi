@@ -1,7 +1,7 @@
 import { Check, ChevronLeft, Download, ExternalLink, FolderOpen, GitFork, Lock, RefreshCw, Search, Star } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ago } from '@shared/tools';
-import type { CloneProgress, CloneResult, GithubRepo, LocalProject, RepoListKind } from '@shared/types';
+import type { CloneProgress, CloneResult, GithubPerson, GithubRepo, LocalProject, PeopleList, RepoListKind, TopList } from '@shared/types';
 import { Segmented } from '../components/ui';
 import { useApp } from '../store';
 import { LocalDetail, LocalList } from './Locals';
@@ -10,9 +10,10 @@ type Kind = RepoListKind | 'local';
 
 /**
  * GitHub tab, next to the Arsenal: repositories as cards — yours, the ones
- * you starred, someone's, or a search of all of GitHub. A card opens its
- * detail, where "Puxar para a Área de Trabalho" clones it. Listing and
- * cloning happen in the main process; this page only sends names.
+ * you starred, someone's, or a search of all of GitHub. Before a search,
+ * "De alguém" shows the people you follow and "Explorar" the week's top 10.
+ * A card opens its detail, where "Puxar para a Área de Trabalho" clones it.
+ * Listing and cloning happen in the main process; this page only sends names.
  */
 
 const LANG_COLOR: Record<string, string> = {
@@ -44,6 +45,15 @@ const PLACEHOLDER: Record<Kind, string> = {
   search: 'Buscar projetos em todo o GitHub e Enter',
 };
 
+const TOP_LANGS = [
+  { value: '', label: 'Todas' },
+  { value: 'Python', label: 'Python' },
+  { value: 'TypeScript', label: 'TypeScript' },
+  { value: 'JavaScript', label: 'JavaScript' },
+  { value: 'Rust', label: 'Rust' },
+  { value: 'Go', label: 'Go' },
+];
+
 const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : String(n));
 
 export function GithubSheet() {
@@ -57,8 +67,31 @@ export function GithubSheet() {
   const [open, setOpen] = useState<GithubRepo | null>(null);
   const [openLocal, setOpenLocal] = useState<LocalProject | null>(null);
   const [localKey, setLocalKey] = useState(0);
+  const [topLang, setTopLang] = useState('');
+  const [top, setTop] = useState<TopList | null>(null);
+  const [people, setPeople] = useState<PeopleList | null>(null);
+  const topFor = useRef('');
   const remote = kind === 'user' || kind === 'search';
   const local = kind === 'local';
+  const showTop = kind === 'search' && !submitted;
+  const showPeople = kind === 'user' && !submitted;
+  const lists = !local && !showTop && !showPeople;
+
+  const loadTop = async (lang: string, force = false) => {
+    topFor.current = lang;
+    setLoading(true);
+    const r = await window.orbi.githubTop(lang, force);
+    // A slower answer for a language no longer picked is dropped.
+    if (topFor.current !== lang) return;
+    setLoading(false);
+    setTop(r);
+  };
+  const loadPeople = async (force = false) => {
+    setLoading(true);
+    const r = await window.orbi.githubFollowing(force);
+    setLoading(false);
+    setPeople(r);
+  };
 
   const load = async (k: Kind, q: string) => {
     if (k === 'local') return setLocalKey((n) => n + 1);
@@ -69,12 +102,17 @@ export function GithubSheet() {
     setRepos(r.repos);
     setError(r.error ?? '');
   };
-  // "Meus" and "Estrelas" load at once; "De alguém" and "Explorar" wait for Enter.
+  // "Meus" and "Estrelas" load at once; "De alguém" and "Explorar" wait for
+  // Enter and meanwhile show the people you follow and the week's top 10.
   useEffect(() => {
     if (local) return;
     if (!remote) void load(kind, '');
     else if (submitted) void load(kind, submitted);
-    else setRepos([]);
+    else {
+      setRepos([]);
+      if (kind === 'search') void loadTop(topLang);
+      else void loadPeople();
+    }
   }, [kind, submitted]);
 
   const q = query.trim().toLowerCase();
@@ -82,6 +120,13 @@ export function GithubSheet() {
     () => (repos ?? []).filter((r) => remote || !q || `${r.fullName} ${r.description ?? ''} ${r.language ?? ''}`.toLowerCase().includes(q)),
     [repos, q, remote],
   );
+
+  const openPerson = (login: string) => (setQuery(login), setSubmitted(login));
+  const reload = () => {
+    if (showTop) void loadTop(topLang, true);
+    else if (showPeople) void loadPeople(true);
+    else void load(kind, remote ? submitted : '');
+  };
 
   if (open) return <RepoDetail repo={open} onBack={() => setOpen(null)} />;
   if (openLocal) return <LocalDetail project={openLocal} onBack={() => setOpenLocal(null)} onChanged={() => setLocalKey((n) => n + 1)} />;
@@ -95,7 +140,11 @@ export function GithubSheet() {
             className="field"
             placeholder={PLACEHOLDER[kind]}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              // Clearing the search brings back the top 10 or the people you follow.
+              if (remote && !e.target.value.trim()) setSubmitted('');
+            }}
             onKeyDown={(e) => e.key === 'Enter' && remote && setSubmitted(query.trim())}
           />
         </div>
@@ -104,7 +153,7 @@ export function GithubSheet() {
           aria-label="Recarregar"
           title="Recarregar"
           disabled={loading}
-          onClick={() => void load(kind, remote ? submitted : '')}
+          onClick={reload}
         >
           <RefreshCw size={14} className={loading ? 'live__spin' : undefined} />
         </button>
@@ -122,20 +171,22 @@ export function GithubSheet() {
           ]}
           onChange={(k) => (setKind(k), setQuery(''), setSubmitted(''), setRepos(null))}
         />
-        {!local ? (
+        {lists ? (
           <span className="arsenal__count">
             {gh?.ok ? `@${gh.login}` : ''} {repos ? `· ${shown.length} ${shown.length === 1 ? 'projeto' : 'projetos'}` : ''}
           </span>
         ) : null}
       </div>
       {local ? <LocalList query={query} onOpen={setOpenLocal} reloadKey={localKey} /> : null}
-      {!local && error ? <div className="feedback arsenal__error">{error}</div> : null}
-      {local ? null : repos === null || (loading && shown.length === 0) ? (
+      {showTop ? <TopTen top={top} loading={loading} lang={topLang} onLang={(l) => (setTopLang(l), void loadTop(l))} onOpen={setOpen} /> : null}
+      {showPeople ? <People list={people} loading={loading} onOpen={openPerson} /> : null}
+      {lists && error ? <div className="feedback arsenal__error">{error}</div> : null}
+      {!lists ? null : repos === null || (loading && shown.length === 0) ? (
         <div className="arsenal__empty">Carregando…</div>
       ) : shown.length === 0 && !error ? (
-        <div className="arsenal__empty">{remote && !submitted ? 'Digite e aperte Enter.' : 'Nenhum projeto.'}</div>
+        <div className="arsenal__empty">Nenhum projeto.</div>
       ) : null}
-      <div className="arsenal__grid" hidden={local}>
+      <div className="arsenal__grid" hidden={!lists}>
         {shown.map((r) => (
           <RepoCard key={r.fullName} r={r} showOwner={kind !== 'mine'} onOpen={() => setOpen(r)} />
         ))}
@@ -144,10 +195,82 @@ export function GithubSheet() {
   );
 }
 
-function RepoCard({ r, showOwner, onOpen }: { r: GithubRepo; showOwner: boolean; onOpen: () => void }) {
+/** "Explorar" before a search: the week's top 10, kept by the main process for a few hours. */
+function TopTen({
+  top,
+  loading,
+  lang,
+  onLang,
+  onOpen,
+}: {
+  top: TopList | null;
+  loading: boolean;
+  lang: string;
+  onLang: (lang: string) => void;
+  onOpen: (r: GithubRepo) => void;
+}) {
+  const repos = top?.repos ?? [];
+  return (
+    <>
+      <div className="group-title">Top 10 da semana</div>
+      <div className="arsenal__bar">
+        <Segmented label="Linguagem" value={lang} options={TOP_LANGS} onChange={onLang} />
+      </div>
+      {top?.error ? <div className="feedback arsenal__error">{top.error}</div> : null}
+      {top === null || (loading && repos.length === 0) ? (
+        <div className="arsenal__empty">Carregando…</div>
+      ) : repos.length === 0 && !top.error ? (
+        <div className="arsenal__empty">Nenhum projeto novo nesta semana.</div>
+      ) : null}
+      <div className="arsenal__grid">
+        {repos.map((r, i) => (
+          <RepoCard key={r.fullName} r={r} rank={i + 1} showOwner onOpen={() => onOpen(r)} />
+        ))}
+      </div>
+      <div className="arsenal__text arsenal__hint">
+        Projetos criados nos últimos 7 dias com mais estrelas no GitHub
+        {top?.fetchedAt ? ` · atualizado ${ago(top.fetchedAt)}` : ''}. É o ranking do GitHub, não uma indicação do Orbi: confira o
+        projeto antes de usar.
+      </div>
+    </>
+  );
+}
+
+/** "De alguém" before a search: the people you follow; a click lists their projects. */
+function People({ list, loading, onOpen }: { list: PeopleList | null; loading: boolean; onOpen: (login: string) => void }) {
+  const people = list?.people ?? [];
+  return (
+    <>
+      <div className="group-title">Quem você segue</div>
+      {list?.error ? <div className="feedback arsenal__error">{list.error}</div> : null}
+      {list === null || (loading && people.length === 0) ? (
+        <div className="arsenal__empty">Carregando…</div>
+      ) : people.length === 0 && !list.error ? (
+        <div className="arsenal__empty">Você ainda não segue ninguém no GitHub. Digite um usuário acima e aperte Enter.</div>
+      ) : null}
+      <div className="gh__people">
+        {people.map((p) => (
+          <PersonCard key={p.login} p={p} onOpen={() => onOpen(p.login)} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PersonCard({ p, onOpen }: { p: GithubPerson; onOpen: () => void }) {
+  return (
+    <button className="gh__person" onClick={onOpen} title={`Ver os projetos de ${p.login}`}>
+      {p.avatar ? <img className="gh__avatar gh__avatar--big" src={`${p.avatar}&s=56`} alt="" /> : null}
+      <span className="gh__person-name">{p.login}</span>
+    </button>
+  );
+}
+
+function RepoCard({ r, rank, showOwner, onOpen }: { r: GithubRepo; rank?: number; showOwner: boolean; onOpen: () => void }) {
   return (
     <button className="acard" onClick={onOpen}>
       <div className="acard__top">
+        {rank ? <span className="gh__rank">{rank}</span> : null}
         {r.avatar ? <img className="gh__avatar" src={`${r.avatar}&s=40`} alt="" /> : null}
         <span className="gh__owner">{showOwner ? r.owner : r.private ? 'privado' : 'público'}</span>
         {r.private ? <Lock size={11} className="gh__lock" aria-label="Privado" /> : null}
