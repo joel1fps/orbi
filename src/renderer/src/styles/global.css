@@ -181,8 +181,38 @@ button {
 
 .panel__spacer {
   flex: 1;
+  min-width: 12px;
   align-self: stretch;
   cursor: grab;
+}
+
+/* The limit pills give way (names shorten) so the buttons on the right always fit. */
+.usage-pills {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.usage-pills .usage-pill {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+/* Hidden from sight only: screen readers still say the name. */
+.usage-pills[data-compact] .usage-pill__name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.usage-pill__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel__head > .tab,
+.panel__head > .icon-btn {
+  flex: none;
 }
 
 .tab {

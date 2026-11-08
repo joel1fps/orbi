@@ -84,7 +84,8 @@ export function secretPathReason(path: string): string | null {
 }
 
 const SECRET_TEXT: [RegExp, string][] = [
-  [/-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----/, 'chave privada'],
+  // The header alone is only a mention (docs, tests); a real key has its encoded body right after it.
+  [/-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY( BLOCK)?-----\r?\n(?:[\w-]+: [^\n]*\r?\n)*\r?\n?[A-Za-z0-9+/=]{40,}/, 'chave privada'],
   [/\bgh[pousr]_[A-Za-z0-9]{36,}\b|\bgithub_pat_[A-Za-z0-9_]{60,}\b/, 'token do GitHub'],
   [/\bsk-ant-[A-Za-z0-9_-]{20,}/, 'chave da Anthropic'],
   [/\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}/, 'chave da OpenAI'],

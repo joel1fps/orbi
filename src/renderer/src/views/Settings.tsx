@@ -120,8 +120,11 @@ export function SettingsSheet() {
       <div className="rows">
         <div className="row">
           <div className="row__main">
-            <div className="row__title">Orbi Desktop 0.1</div>
-            <div className="row__sub">Os dados ficam neste computador. O Orbi só fala com o GitHub quando você conecta um token.</div>
+            <div className="row__title">Orbi Desktop {__APP_VERSION__}</div>
+            <div className="row__sub">
+              Os dados ficam neste computador. O Orbi só fala com a internet para os limites dos seus agentes, o catálogo do Arsenal e a aba
+              GitHub, e nunca envia seus arquivos sem você pedir.
+            </div>
           </div>
           <button className="btn btn--ghost" onClick={() => window.orbi.quit()}>
             Sair do Orbi

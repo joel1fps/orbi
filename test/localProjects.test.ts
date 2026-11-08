@@ -53,9 +53,15 @@ test('secret files and secrets inside files never go up', () => {
   assert.ok(secretPathReason('home/.ssh/id_ed25519'));
   assert.ok(secretPathReason('config/credentials.json'));
   assert.equal(secretPathReason('src/environment.ts'), null);
+  // Fake secrets are assembled here, so this file never holds one Orbi would refuse to send.
+  const keyHeader = ['-----BEGIN OPENSSH', 'PRIVATE KEY-----'].join(' ');
   assert.ok(secretInText(`const t = "ghp_${'a'.repeat(36)}";`));
-  assert.ok(secretInText('-----BEGIN OPENSSH PRIVATE KEY-----\nabc'));
-  assert.ok(secretInText('AWS=AKIAABCDEFGHIJKLMNOP'));
+  assert.ok(secretInText(`${keyHeader}\n${'b3BlbnNzaC1rZXktdjE'.repeat(4)}\n`));
+  assert.ok(secretInText(`${keyHeader}\r\n${'A'.repeat(64)}\r\n`));
+  // Docs and tests that only name the header are not a key.
+  assert.equal(secretInText(`${keyHeader}\nabc`), null);
+  assert.equal(secretInText(`Uma chave começa com ${keyHeader}.`), null);
+  assert.ok(secretInText(`AWS=AKIA${'ABCDEFGHIJKLMNOP'}`));
   assert.ok(secretInText(`key: sk-ant-${'x'.repeat(30)}`));
   assert.equal(secretInText('const sk = "skip"; // AKIA but short'), null);
 });

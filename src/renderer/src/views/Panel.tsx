@@ -69,7 +69,8 @@ function UsagePills() {
   // Installed but no reading yet: the pill shows "—" and its card says why (e.g. Antigravity closed).
   const shown = PLAN_TOOLS.filter((t) => usage.some((u) => u.tool === t) || tools.find((x) => x.id === t)?.availability !== 'not-installed');
   return (
-    <>
+    // Four pills do not fit with their names: then each keeps its coloured ring and number (name on hover).
+    <div className="usage-pills" data-compact={shown.length >= 4 || undefined}>
       {shown.map((t) => {
         const u = usage.find((x) => x.tool === t);
         const w = headlineWindow(u, now);
@@ -85,14 +86,14 @@ function UsagePills() {
             title={u ? `Limite do plano ${PLAN_NAME[t]}. Fonte: ${u.source}${stale ? ` (desatualizado, ${ago(u.observedAt, now)})` : ''}` : `Uso do plano ${PLAN_NAME[t]} ainda sem fonte de dados`}
           >
             {w ? <UsageRing pct={w.usedPercent} tone={PLAN_TONE[t]} size={13} /> : <span className="usage-pill__dot" style={{ opacity: 0.35 }} />}
-            {PLAN_NAME[t]}{' '}
+            <span className="usage-pill__name">{PLAN_NAME[t]}</span>
             <span style={stale ? { opacity: 0.5 } : w ? { color: levelTone(w.usedPercent, 'inherit') } : undefined}>
               {w ? `${Math.round(w.usedPercent)}%${stale ? '?' : ''}` : u && !stale ? 'renovado' : '—'}
             </span>
           </button>
         );
       })}
-    </>
+    </div>
   );
 }
 
