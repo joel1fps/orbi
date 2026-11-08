@@ -1,5 +1,5 @@
 export type ViewMode = 'compact' | 'panel';
-export type PanelTab = 'home' | 'live' | 'arsenal' | 'tools' | 'settings';
+export type PanelTab = 'home' | 'live' | 'arsenal' | 'github' | 'tools' | 'settings';
 export type MascotStyle = '2d' | '3d';
 
 export type BuiltinToolId = 'claude' | 'codex' | 'antigravity' | 'gemini' | 'hermes' | 'github';
@@ -125,6 +125,45 @@ export interface GithubSnapshot {
   contributions?: { total: number; streak: number; days: { date: string; count: number }[] };
   fetchedAt: number;
   via: 'token' | 'gh';
+}
+
+/** One repository in the GitHub tab. */
+export interface GithubRepo {
+  fullName: string;
+  owner: string;
+  name: string;
+  description?: string;
+  language?: string;
+  stars: number;
+  forks: number;
+  private: boolean;
+  fork: boolean;
+  archived: boolean;
+  updatedAt: string;
+  url: string;
+  avatar?: string;
+}
+
+/** mine: your repositories; starred: the ones you starred; user: someone's public ones; search: all of GitHub. */
+export type RepoListKind = 'mine' | 'starred' | 'user' | 'search';
+
+export interface RepoList {
+  repos: GithubRepo[];
+  error?: string;
+}
+
+export interface CloneProgress {
+  fullName: string;
+  /** 0–100 while running. */
+  percent: number;
+  phase: string;
+}
+
+export interface CloneResult {
+  ok: boolean;
+  message: string;
+  /** The folder of the clone, also when it already existed. */
+  path?: string;
 }
 
 export interface GithubError {
@@ -254,7 +293,7 @@ export interface SkillCatalogEntry {
   support: SkillTargetId[];
   license: string;
   version?: string;
-  source?: { label: string; repo: string; commit: string; url: string };
+  source?: { label: string; repo: string; commit: string; url: string; private?: boolean };
   /** The SKILL.md folders it installs; empty for a manual reference. */
   skills: { name: string; files: SkillFileInfo[] }[];
   hasScripts: boolean;

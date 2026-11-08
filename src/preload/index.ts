@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type {
+  CloneProgress,
+  CloneResult,
   CursorInfo,
   HubState,
   IdleLevel,
@@ -7,6 +9,8 @@ import type {
   MainCommand,
   OrbiEvent,
   PermissionDecision,
+  RepoList,
+  RepoListKind,
   Settings,
   SessionFileView,
   SimulationKind,
@@ -32,6 +36,7 @@ const api = {
   onSettings: (cb: (s: Settings) => void) => on('orbi:settings', cb),
   onDocked: (cb: (d: boolean) => void) => on('orbi:docked', cb),
   onIdle: (cb: (l: IdleLevel) => void) => on('orbi:idle', cb),
+  onClone: (cb: (p: CloneProgress) => void) => on('github:clone', cb),
 
   setInteractive: (on: boolean) => ipcRenderer.send('widget:interactive', on),
   dragStart: () => ipcRenderer.send('widget:drag-start'),
@@ -64,6 +69,9 @@ const api = {
     ipcRenderer.invoke('skills:apply', planId, opts),
   skillsUninstall: (skillId: string, targetId: SkillTargetId): Promise<SkillActionResult> => ipcRenderer.invoke('skills:uninstall', skillId, targetId),
   skillsOpen: (targetId: SkillTargetId, name?: string) => ipcRenderer.send('skills:open', targetId, name),
+  githubFromGit: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('github:from-git'),
+  githubRepos: (kind: RepoListKind, query?: string): Promise<RepoList> => ipcRenderer.invoke('github:repos', kind, query),
+  githubClone: (fullName: string, pickFolder: boolean): Promise<CloneResult> => ipcRenderer.invoke('github:clone', fullName, pickFolder),
   skillsRefresh: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('skills:refresh'),
   quit: () => ipcRenderer.send('app:quit'),
 };

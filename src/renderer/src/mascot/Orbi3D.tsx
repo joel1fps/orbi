@@ -129,6 +129,12 @@ function useAssets() {
       ),
       capsule: new THREE.CapsuleGeometry(0.2, 0.55, 8, 16),
       plane: new THREE.PlaneGeometry(1, 1),
+      // Notebook (typing while an agent works)
+      box: new THREE.BoxGeometry(1, 1, 1),
+      logoRing: new THREE.TorusGeometry(0.19, 0.04, 8, 28),
+      lid: phys('#2a3532', { roughness: 0.35, metalness: 0.25, clearcoat: 0.7 }),
+      deck: phys('#3a4744', { roughness: 0.45, metalness: 0.2 }),
+      screen: new THREE.MeshBasicMaterial({ color: '#d9fff6' }),
     };
   }, []);
 }
@@ -206,6 +212,12 @@ function Creature(props: Orbi2DProps) {
   const antR = useRef<THREE.Group>(null);
   const sat = useRef<THREE.Mesh>(null);
   const shadow = useRef<THREE.Mesh>(null);
+  const laptop = useRef<THREE.Group>(null);
+  const pawL = useRef<THREE.Mesh>(null);
+  const pawR = useRef<THREE.Mesh>(null);
+  const screenLight = useRef<THREE.PointLight>(null);
+  // 0 = notebook put away, 1 = on the lap.
+  const lap = useRef(props.working ? 1 : 0);
 
   const hop = useMotionValue(0);
   const sx = useMotionValue(1);
@@ -313,6 +325,26 @@ function Creature(props: Orbi2DProps) {
       const k = 1 - hop.get() * 0.5;
       shadow.current.scale.set(3.6 * k, 0.9 * k, 1);
     }
+
+    // Notebook slides up onto the lap; the resting arms tuck away and two paws type behind the lid.
+    const goal = props.working ? 1 : 0;
+    lap.current = still ? goal : THREE.MathUtils.damp(lap.current, goal, props.working ? 7 : 9, dt);
+    const l = lap.current;
+    if (laptop.current) {
+      laptop.current.visible = l > 0.01;
+      laptop.current.position.y = (1 - l) * -1.1;
+      laptop.current.scale.setScalar(0.6 + 0.4 * l);
+    }
+    const arms = Math.max(0.001, 1 - Math.min(1, l * 2));
+    armL.current?.scale.setScalar(arms);
+    armR.current?.scale.setScalar(arms);
+    if (props.working && !still) {
+      const beat = t * 6.5 * Math.PI;
+      const pause = Math.sin(t * 0.9) > 0.82;
+      if (pawL.current) pawL.current.position.y = wy(72) + (pause ? 0 : Math.max(0, Math.sin(beat)) * 0.12);
+      if (pawR.current) pawR.current.position.y = wy(72) + (pause ? 0 : Math.max(0, Math.sin(beat + Math.PI)) * 0.12);
+    }
+    if (screenLight.current) screenLight.current.intensity = l * (2.2 + (still ? 0 : 0.5 * Math.sin(t * 7.3) * Math.sin(t * 2.1)));
   });
 
   return (
@@ -362,6 +394,20 @@ function Creature(props: Orbi2DProps) {
         </group>
       </group>
 
+      {/* Notebook on the lap: the hinge is toward us, the screen faces Orbi and lights its face */}
+      <group ref={laptop}>
+        <pointLight ref={screenLight} position={[0, wy(70), 1.25]} color="#bff7ec" intensity={0} distance={3.2} decay={1.6} />
+        <mesh geometry={a.box} material={a.deck} position={[0, wy(101), 1.55]} scale={[3.3, 0.14, 1.25]} />
+        <group position={[0, wy(100.5), 2.12]} rotation={[-0.2, 0, 0]}>
+          <mesh geometry={a.box} material={a.lid} position={[0, 0.72, 0]} scale={[2.75, 1.44, 0.08]} />
+          <mesh geometry={a.plane} material={a.screen} position={[0, 0.72, -0.045]} rotation={[0, Math.PI, 0]} scale={[2.55, 1.28, 1]} />
+          <mesh geometry={a.logoRing} material={a.aqua} position={[0, 0.72, 0.05]} />
+          <mesh geometry={a.sphere} material={a.sun} position={[0.17, 0.86, 0.06]} scale={0.06} />
+        </group>
+        <mesh ref={pawL} geometry={a.sphere} material={a.body} position={[wx(47), wy(72), 1.85]} scale={[0.3, 0.22, 0.26]} />
+        <mesh ref={pawR} geometry={a.sphere} material={a.body} position={[wx(73), wy(72), 1.85]} scale={[0.3, 0.22, 0.26]} />
+      </group>
+
       {/* Orbital ring, tilted like the drawing: the front dips across the belly, the back rises behind the head */}
       <group position={[0, wy(64), 0]} rotation={[-1.32, 0, -0.09]}>
         <mesh geometry={a.ringGeo} material={a.ring} />
@@ -401,7 +447,7 @@ export default function Orbi3D(props: Orbi2DProps) {
   const busyUntil = useRef(0);
   useEffect(() => {
     busyUntil.current = performance.now() + 1600;
-  }, [props.action, props.expression]);
+  }, [props.action, props.expression, props.working]);
   useEffect(() => {
     const bump = () => (busyUntil.current = Math.max(busyUntil.current, performance.now() + 400));
     const offX = props.lookX.on('change', bump);

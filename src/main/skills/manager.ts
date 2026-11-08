@@ -64,7 +64,7 @@ interface IndexPackage {
   support: SkillTargetId[];
   license: string;
   version?: string;
-  source?: { label: string; repo: string; commit: string; url: string };
+  source?: { label: string; repo: string; commit: string; url: string; private?: boolean };
   skills: IndexFolder[];
   hasScripts: boolean;
   manual?: SkillCatalogEntry['manual'];
@@ -323,8 +323,26 @@ async function gh<T>(path: string, accept = 'application/vnd.github+json'): Prom
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (res.status === 403 || res.status === 429) throw new Error('limite de consultas do GitHub atingido; conecte o GitHub em Ferramentas ou tente mais tarde');
+  if (res.status === 404 && !token) throw new Error(PRIVATE_NOTE);
   if (!res.ok) throw new Error(`GitHub respondeu ${res.status}`);
   return (accept.endsWith('.sha') ? await res.text() : await res.json()) as T;
+}
+
+const PRIVATE_NOTE = 'repositório privado: conecte o GitHub em Ferramentas com um token que tenha acesso a ele';
+
+/** One file at a pinned commit. A private repository needs the GitHub token saved in Ferramentas. */
+async function rawFile(repo: string, commit: string, path: string[], isPrivate?: boolean, size?: number): Promise<Buffer> {
+  // raw.githubusercontent.com answers 501 for empty files.
+  if (size === 0) return Buffer.alloc(0);
+  const token = isPrivate ? store.getGithubToken() : null;
+  if (isPrivate && !token) throw new Error(PRIVATE_NOTE);
+  const res = await fetch(`https://raw.githubusercontent.com/${repo}/${commit}/${path.map(encodeURIComponent).join('/')}`, {
+    headers: token ? { authorization: `token ${token}` } : {},
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (res.status === 404 && isPrivate) throw new Error(`${PRIVATE_NOTE} (o token salvo não chega a ${repo})`);
+  if (!res.ok) throw new Error(`falha ao baixar ${path.join('/')} (HTTP ${res.status})`);
+  return Buffer.from(await res.arrayBuffer());
 }
 
 /**
@@ -360,11 +378,7 @@ export async function refreshCatalog(): Promise<{ ok: boolean; message: string }
             const files: ManifestFile[] = [];
             for (const f of listed) {
               const parts = [...(s.path === '.' ? [] : s.path.split('/')), ...f.path.split('/')];
-              const res = await fetch(`https://raw.githubusercontent.com/${repo}/${commit}/${parts.map(encodeURIComponent).join('/')}`, {
-                signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-              });
-              if (!res.ok) throw new Error(`falha ao baixar ${s.name}/${f.path}`);
-              const bytes = Buffer.from(await res.arrayBuffer());
+              const bytes = await rawFile(repo, commit, parts, p.source!.private, f.size);
               files.push({ path: f.path, size: bytes.length, sha256: sha256(bytes) });
             }
             if (validateManifest({ name: s.name, files }).errors.length === 0) skills.push({ ...s, files });
@@ -464,10 +478,7 @@ async function download(pkg: IndexPackage, into: string) {
   for (const s of pkg.skills) {
     for (const f of s.files) {
       const parts = [...(s.path === '.' ? [] : s.path.split('/')), ...f.path.split('/')];
-      const url = `https://raw.githubusercontent.com/${repo}/${commit}/${parts.map(encodeURIComponent).join('/')}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-      if (!res.ok) throw new Error(`Falha ao baixar ${s.name}/${f.path} (HTTP ${res.status}).`);
-      const bytes = Buffer.from(await res.arrayBuffer());
+      const bytes = await rawFile(repo, commit, parts, pkg.source!.private, f.size);
       if (bytes.length !== f.size || sha256(bytes) !== f.sha256) {
         throw new Error(`${s.name}/${f.path} não confere com o catálogo (tamanho ou hash diferente). Nada foi instalado.`);
       }

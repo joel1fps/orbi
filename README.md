@@ -35,7 +35,8 @@ Arraste a ilha para qualquer lugar. Solte perto do topo da tela para ela encaixa
 
 ## O Orbi vivo
 
-- Ao abrir: a ilha nasce de um ponto no topo, o Orbi cai dentro dela, acena, pisca duas vezes e olha em volta. Uma vez por execução; recarregar a interface não repete, e "Reduzir animações" pula.
+- Ao abrir: a ilha nasce de um ponto no topo, um feixe de luz desce, um portal se abre aos pés dele e o Orbi cai dentro dela com faíscas, acena, pisca duas vezes e olha em volta; a ilha diz "Oi! Cheguei" (e o balão "Oi!" aparece no painel). Uma vez por execução; recarregar a interface não repete, e "Reduzir animações" pula.
+- Enquanto um agente trabalha, ele puxa um notebook para o colo e digita: as patinhas batem nas teclas, a luz da tela pisca no rosto dele e pedacinhos de código (`</>`, `{ }`) sobem ao lado da cabeça. Ao terminar, guarda o notebook. Funciona no 2D, no 3D e na ilha pequena.
 - Pisca, respira, balança as antenas, e o satélite orbita de verdade (passa na frente e atrás dele). Troca de expressão sempre por trás de uma piscada, sem saltos.
 - Segue o cursor com os olhos e o corpo em qualquer lugar da tela. O cursor em cima dele o deixa curioso.
 - No cartão do painel: clique para um "boop", vários cliques rápidos para cócegas, clique e esfregue o cursor para carinho (corações). Abrir o painel faz ele dar um pulinho.
@@ -68,7 +69,13 @@ Segurança:
 - Cada instalação fica registrada em `%APPDATA%\Orbi\skills-ledger.json`. Remover apaga só os arquivos ainda idênticos ao que o Orbi gravou; o que você editou ou criou fica.
 - Todo acesso a disco e rede acontece no processo principal; a interface só envia identificadores.
 
-Para atualizar o catálogo (mantenedores): `node scripts/build-skills-index.mjs [--refs <pasta do site>]` lê o site de referências (por padrão `../minhas-referencias`), fixa o commit atual de cada repositório (via `git ls-remote`, sem gastar cota da API) e recalcula os hashes; revise o diff antes de publicar. Repositórios grandes demais (mais de 30 skills num plugin ou 25 MB) viram instalação manual sem serem baixados.
+**Atualizar catálogo** (botão na grade): leva cada pacote instalável ao commit mais novo do repositório, baixando de novo e refazendo os hashes; a cópia atualizada fica em `%APPDATA%\Orbi\skills-index.json` e a do app volta a valer quando um Orbi novo traz um catálogo mais recente. Skills instaladas que você editou aparecem como **editada**. Repositórios privados (como as suas skills jurídicas) precisam do GitHub conectado em Ferramentas.
+
+Para refazer o catálogo inteiro, incluindo itens novos do site (mantenedores): `node scripts/build-skills-index.mjs [--refs <pasta do site>]` lê o site de referências (por padrão `../minhas-referencias`), fixa o commit atual de cada repositório (via `git ls-remote`, sem gastar cota da API) e recalcula os hashes; revise o diff antes de publicar. Repositórios grandes demais (mais de 30 skills num plugin ou 25 MB) viram instalação manual sem serem baixados.
+
+## Projetos do GitHub
+
+Com o GitHub conectado (token em Ferramentas, o botão **Usar o login do Git**, que aproveita o login que o `git push` já usa, ou o GitHub CLI), aparece no painel a aba de projetos, ao lado do Arsenal: cartões com os seus repositórios (**Meus**), os que você marcou com estrela (**Estrelas**), os de uma pessoa (**De alguém**, pelo usuário) ou uma busca em todo o GitHub (**Explorar**). Abrir um cartão mostra o projeto e o botão **Puxar para a Área de Trabalho** (ou **Escolher pasta…**), que clona com o seu Git e mostra o progresso. O Orbi não executa nada do projeto; o token vai para o Git só durante o clone, pelo ambiente, e não fica gravado no `.git/config` do projeto. Uma pasta com o mesmo nome nunca é sobrescrita.
 
 ## Integrações e de onde vêm os dados
 

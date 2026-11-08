@@ -17,6 +17,7 @@ import { connectCodex, startCodexUsage } from './integrations/codexUsage';
 import { startDetection } from './integrations/detect';
 import { startGeminiQuota } from './integrations/geminiQuota';
 import { refreshGithub, startGithub } from './integrations/github';
+import { cloneRepo, githubFromGit, listRepos } from './integrations/githubRepos';
 import { startDebugServer } from './debug';
 import { resource } from './resources';
 import { sessionFile } from './sessionFile';
@@ -247,6 +248,14 @@ function registerIpc() {
     return ok;
   });
   ipcMain.handle('github:refresh', () => refreshGithub());
+  ipcMain.handle('github:from-git', async () => {
+    const r = await githubFromGit();
+    send('orbi:settings', store.settings);
+    if (r.ok) await refreshGithub();
+    return r;
+  });
+  ipcMain.handle('github:repos', (_e, kind: unknown, query: unknown) => listRepos(kind, query));
+  ipcMain.handle('github:clone', (_e, fullName: unknown, pick: unknown) => cloneRepo(fullName, pick));
   ipcMain.on('open:external', (_e, url: string) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
   });

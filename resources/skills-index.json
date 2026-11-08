@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-02T19:44:43.867Z",
+  "generatedAt": "2026-11-08T20:03:28.133Z",
   "packages": [
     {
       "id": "anthropics/frontend-design",
@@ -20,8 +20,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/frontend-design"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/frontend-design"
       },
       "skills": [
         {
@@ -63,8 +63,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/web-artifacts-builder"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/web-artifacts-builder"
       },
       "skills": [
         {
@@ -121,8 +121,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/webapp-testing"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/webapp-testing"
       },
       "skills": [
         {
@@ -184,8 +184,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/mcp-builder"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/mcp-builder"
       },
       "skills": [
         {
@@ -272,8 +272,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/skill-creator"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/skill-creator"
       },
       "skills": [
         {
@@ -395,8 +395,8 @@
       "source": {
         "label": "Anthropic",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/claude-api"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/claude-api"
       },
       "skills": [
         {
@@ -1513,8 +1513,8 @@
       "source": {
         "label": "anthropics",
         "repo": "anthropics/skills",
-        "commit": "ca45fc496a3436251f191354091d557da31c15b5",
-        "url": "https://github.com/anthropics/skills/tree/ca45fc496a3436251f191354091d557da31c15b5/skills/theme-factory"
+        "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+        "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/theme-factory"
       },
       "skills": [
         {
@@ -1606,7 +1606,7 @@
         "install": "/plugin marketplace add anthropics/claude-plugins-official\n/plugin   # aba Discover para instalar",
         "url": "https://github.com/anthropics/claude-plugins-official",
         "docs": "https://code.claude.com/docs/en/plugins",
-        "note": "Grande demais para instalar por aqui (33 skills, 1.4 MB): use o comando abaixo."
+        "note": "Grande demais para instalar por aqui (40 skills, 1.5 MB): use o comando abaixo."
       },
       "skills": [],
       "hasScripts": false,
@@ -1695,8 +1695,8 @@
       "source": {
         "label": "obra",
         "repo": "obra/superpowers",
-        "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
-        "url": "https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/"
+        "commit": "22f0b463e7a5e579904dd6211a520321035526f7",
+        "url": "https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/"
       },
       "skills": [
         {
@@ -1725,8 +1725,8 @@
             },
             {
               "path": "scripts/start-server.sh",
-              "size": 6908,
-              "sha256": "a4e5ae84275bcaacd2f84345afeabe59cf7b00ba080e123da7cc1fb226f12847"
+              "size": 7315,
+              "sha256": "314dd68dc00e8dd94c7491aca8a5f004c7fddffc161e2b07482f29f48d13659a"
             },
             {
               "path": "scripts/stop-server.sh",
@@ -1735,8 +1735,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 13602,
-              "sha256": "61a7ef918652108c76a3fd01e02dd92d39996c6b46d4cb2819cbd03f6c45e46a"
+              "size": 15190,
+              "sha256": "2c9ca71f94886f9ca9f4aef055f7cafb3e1a9bdf3aeebf8f4cb547c69405d207"
             },
             {
               "path": "visual-companion.md",
@@ -1868,18 +1868,18 @@
           "files": [
             {
               "path": "scripts/task-done",
-              "size": 1692,
-              "sha256": "d0d4f2397c85a4426443ea955e699ef12568b41b408ec6122d4ec2433ee3a5f6"
+              "size": 1900,
+              "sha256": "ac0b5ebafc7d471507b7e94d88da77a11f187ba277c8d48fefaf8ff3e4fee50e"
             },
             {
               "path": "scripts/task-start",
-              "size": 963,
-              "sha256": "f833693c8fce3700fc9f841562d80f8015cd40f652c168a3405ac3e46947a1fe"
+              "size": 1185,
+              "sha256": "4ae7ce3b6777c3240af786197836a6b4bbf3b0ee831c25f147c149ea8db54a21"
             },
             {
               "path": "SKILL.md",
-              "size": 18103,
-              "sha256": "e4649e59880ef2643d1da128e3d607e87e3f969410d72095a5bf65811b6036dc"
+              "size": 18364,
+              "sha256": "deaf176fa179827e80f2ea3101db3ea90fdf562ebef340eba761e4687940f5f5"
             }
           ]
         },
@@ -1932,8 +1932,8 @@
             },
             {
               "path": "re-review-prompt.md",
-              "size": 4761,
-              "sha256": "0828a5e9cbb12ba49f14621dd8c3953c48c0fc383e75bb5494f055ed0d6d824f"
+              "size": 4833,
+              "sha256": "ad54d0a10f1c2c8e656456e0a46e654af5dfe5ee6bcef63428cfd69b8dcd9311"
             },
             {
               "path": "references/batching.md",
@@ -1947,13 +1947,13 @@
             },
             {
               "path": "references/final-review.md",
-              "size": 2447,
-              "sha256": "2fd999d86e5dd0b9b32aaf93f2a41663ef30b3e3cb78fb2fd5cb450eb59eb9de"
+              "size": 2576,
+              "sha256": "6c9e12093e46c4ad0a203bc07709c17e3470f855f1b78e55c5e7b722a012a32c"
             },
             {
               "path": "references/fix-loop.md",
-              "size": 4249,
-              "sha256": "eafff1f801af2ced86e8761f3eeef04b701860d986ba5d0a8b20d506a75104bb"
+              "size": 4314,
+              "sha256": "1938ce707915efc44021e563ebc29666329e20ad861b6c50b89f305b8f4e8d8b"
             },
             {
               "path": "references/handling-reports.md",
@@ -1972,28 +1972,33 @@
             },
             {
               "path": "scripts/review-package",
-              "size": 2029,
-              "sha256": "f9275175b2276b1d5fdb1bae0bedaadd2a950659b7c6f311ea37ff85e1861b1f"
+              "size": 2444,
+              "sha256": "aed7c6e09fc660417d28898ed975e84651cb9f18f4675141cd475edfb7037f3d"
+            },
+            {
+              "path": "scripts/sdd-repo",
+              "size": 2356,
+              "sha256": "6f8256a776968d394bae679572e41ce572fd45c72074b98f9a8eb8b4f160e06f"
             },
             {
               "path": "scripts/sdd-workspace",
-              "size": 3684,
-              "sha256": "4fd9770e7a49b6bde488c0e92bac1b3bd01fcbdaf8f06b6c4efbe3a1abd99f86"
+              "size": 4823,
+              "sha256": "de3af5252fa595fc2000ba05cf69e06187d5c8aae9d283cced4c167ad1813061"
             },
             {
               "path": "scripts/task-brief",
-              "size": 1322,
-              "sha256": "cc563538e09abf719b34ddf4b2fa7a65cf3b301729039dbfa923cb060f729146"
+              "size": 4769,
+              "sha256": "0f244a12e146393c552ba62069d3eedcc85cb3f76de67b01f4e11219e5ebbcd8"
             },
             {
               "path": "SKILL.md",
-              "size": 19506,
-              "sha256": "ba41f697136cba88a7962d60c8e2f97488ba04a8688b1d0fbeb27f6953808e75"
+              "size": 19740,
+              "sha256": "1baf70e307bde682c462513c86116333f1f066168c6710f45145bf5f0b00828d"
             },
             {
               "path": "task-reviewer-prompt.md",
-              "size": 9031,
-              "sha256": "bfed55c8f19d0ff6ed57b0fe09127c92890e9311c6c73917129598826bf9ebe8"
+              "size": 9175,
+              "sha256": "61a04c2fb29907887d8babee1594f5e35ae26d461e7e584f5b7c283215165e08"
             }
           ]
         },
@@ -2010,11 +2015,6 @@
               "path": "condition-based-waiting.md",
               "size": 3516,
               "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
-            },
-            {
-              "path": "CREATION-LOG.md",
-              "size": 4257,
-              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789"
             },
             {
               "path": "defense-in-depth.md",
@@ -2035,26 +2035,6 @@
               "path": "SKILL.md",
               "size": 9530,
               "sha256": "51c6435d98c83c42c96ba7c35725a0b2c376cd487fb1a4e6bd0ddbe7e33ef202"
-            },
-            {
-              "path": "test-academic.md",
-              "size": 653,
-              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486"
-            },
-            {
-              "path": "test-pressure-1.md",
-              "size": 1900,
-              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a"
-            },
-            {
-              "path": "test-pressure-2.md",
-              "size": 2283,
-              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016"
-            },
-            {
-              "path": "test-pressure-3.md",
-              "size": 2692,
-              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708"
             }
           ]
         },
@@ -2231,7 +2211,7 @@
         "install": "npx impeccable install\n# ou no Claude Code\n/plugin marketplace add pbakaus/impeccable",
         "url": "https://github.com/pbakaus/impeccable",
         "docs": "https://impeccable.style/",
-        "note": "Grande demais para instalar por aqui (26 skills, 46.5 MB): use o comando abaixo."
+        "note": "Grande demais para instalar por aqui (26 skills, 46.6 MB): use o comando abaixo."
       },
       "skills": [],
       "hasScripts": false,
@@ -2260,8 +2240,8 @@
       "source": {
         "label": "nextlevelbuilder",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
-        "commit": "713eef51b04efc98d6fa565323b495f7c9c89fd4",
-        "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/713eef51b04efc98d6fa565323b495f7c9c89fd4/"
+        "commit": "4f2dbb67e64969a9a30ab00742f2d55d66ddec2b",
+        "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/4f2dbb67e64969a9a30ab00742f2d55d66ddec2b/"
       },
       "skills": [
         {
@@ -2462,13 +2442,13 @@
             },
             {
               "path": "scripts/fetch-background.py",
-              "size": 13116,
-              "sha256": "020d4e54bc26595472dc4b5a421830e0e83ffea3f44225fac8ac5f832430e691"
+              "size": 13152,
+              "sha256": "211c1702bf8492c2efa05d44c7012f8eaa47f540f9c0ddd22d30c35fbc54f3d2"
             },
             {
               "path": "scripts/generate-slide.py",
-              "size": 28595,
-              "sha256": "0463c98efea54870816925015fe5819e42a29aaba57408c2c38bacb33e2605b9"
+              "size": 28613,
+              "sha256": "f827767f8f47eb3635d77aaeba700844b3a31e89d9201107f1da59f4d241eb09"
             },
             {
               "path": "scripts/generate-tokens.cjs",
@@ -2477,8 +2457,8 @@
             },
             {
               "path": "scripts/html-token-validator.py",
-              "size": 13187,
-              "sha256": "1242a778493a8fd646da50623d654b783ed8d1b6d4234b3271789eae9f5a4bed"
+              "size": 13219,
+              "sha256": "e876ae1a014a0709bff9798e9a56c27336c0fb04e847e563a053917ef0945d44"
             },
             {
               "path": "scripts/search-slides.py",
@@ -2494,6 +2474,11 @@
               "path": "scripts/slide-token-validator.py",
               "size": 973,
               "sha256": "66da5da5e8e659d405a89b342e13dd1e469e79726c46002d9d2368c3c7aaf945"
+            },
+            {
+              "path": "scripts/tests/test_utf8_io.py",
+              "size": 2615,
+              "sha256": "304f4e3e918eda39e11ad80b80bca81a858264aaa8a4aaec34e2d30e267179b3"
             },
             {
               "path": "scripts/tests/test_validate_tokens.py",
@@ -2761,7 +2746,7 @@
             {
               "path": "data/catalog-summary.json",
               "size": 2392,
-              "sha256": "4ca9ee8697984ed678a69a3bfbb788fb7f826d564f22cae5d094df8879517217"
+              "sha256": "b27655fbce8fec64b7ab7ec6ac11f079a0e6ab29a5c2785d624cedc96dd0742f"
             },
             {
               "path": "data/charts.csv",
@@ -2775,8 +2760,8 @@
             },
             {
               "path": "data/data-provenance.json",
-              "size": 36686,
-              "sha256": "e82fb33ed49375a300e93d9c11ccd1c1493c999e84ee7ee295e527634786e2e0"
+              "size": 38203,
+              "sha256": "e29a3aab8d8418a23f67e00a8e8f3064afe4eea1183540ec4af374ec6f4fc938"
             },
             {
               "path": "data/google-font-licenses.json",
@@ -2930,8 +2915,8 @@
             },
             {
               "path": "data/styles.csv",
-              "size": 150036,
-              "sha256": "a6b37e5925d20b4c4b885a8a24aead64e1fcc779c3f0be91cfbe350de5628953"
+              "size": 152958,
+              "sha256": "a9b6cadbd1cb9e7cb8398a3b445e0691d01e42ed5e5efa60a5d0c08c99c8100d"
             },
             {
               "path": "data/typography.csv",
@@ -2945,8 +2930,8 @@
             },
             {
               "path": "data/ux-guidelines.csv",
-              "size": 27516,
-              "sha256": "ff81ec613f70ba9fc3fcce52dbe4ae35d44b2079dbe6dc066d2d6e38c28facd5"
+              "size": 28310,
+              "sha256": "d63dc39439cf615cdccfdf7acd2301e0c3ce5e1e56a89b60617fa190f7511512"
             },
             {
               "path": "references/pro-rules.md",
@@ -2955,8 +2940,8 @@
             },
             {
               "path": "references/quick-reference.md",
-              "size": 24526,
-              "sha256": "0609bc7c89dacb40472465d8fc14257b56b2c43439660fc8d6fa3b8c022e1876"
+              "size": 24773,
+              "sha256": "fc53ccfafaa08d40d7326e34e88e9387df60b4256cd649d34dcae0284f247949"
             },
             {
               "path": "scripts/core.py",
@@ -3041,7 +3026,7 @@
             {
               "path": "scripts/tests/fixtures/relevance-thresholds.json",
               "size": 5079,
-              "sha256": "0e9bdfe71424c3354847e84c2113ed80fb9450221c5cff599c87c07a59ae5d00"
+              "sha256": "8b1d1c87cecb51db673b7d50e5f6cf29169edfa857853accd1ed80fce3fb4e09"
             },
             {
               "path": "scripts/tests/test_catalog_refresh.py",
@@ -3079,6 +3064,11 @@
               "sha256": "83d09ffe8cfbf7b265f362129f061dfe8e5e167ce5db43adaead197cabc9ca38"
             },
             {
+              "path": "scripts/tests/test_ime_composition.py",
+              "size": 4675,
+              "sha256": "6718a0420a5c791c912763ad9d1b66e824b3b55240bc91242a5cccf13482416d"
+            },
+            {
               "path": "scripts/tests/test_native_desktop_stack_freshness.py",
               "size": 8375,
               "sha256": "3942845712b9a829323cd3568511483135f2a8c7cd79ccf61679da4b0f624dbb"
@@ -3090,8 +3080,8 @@
             },
             {
               "path": "scripts/tests/test_rtl_support.py",
-              "size": 6789,
-              "sha256": "73b7006bf88fd1373cf37465fd404d1d16d9c7e1d065e3d0761ba66e990e43d1"
+              "size": 6836,
+              "sha256": "fb1c42f782d1929959c5adaefb8169b187b1446a17720ed4f0691b1cd3bb7898"
             },
             {
               "path": "scripts/tests/test_skill_script_paths.py",
@@ -3101,7 +3091,7 @@
             {
               "path": "scripts/tests/test_style_taxonomy.py",
               "size": 7425,
-              "sha256": "cd14d0092e8a454d213aa104b53e4e70ba698491fa00fde9fdec5ca8a3d70011"
+              "sha256": "58c14be6c741de5382e3aeca858480570ba96d374532c3b22f44851a02d3076b"
             },
             {
               "path": "scripts/tests/test_text_layout_resilience.py",
@@ -3121,7 +3111,7 @@
             {
               "path": "SKILL.md",
               "size": 16646,
-              "sha256": "1bdfb422c97d5e813768af422750882b71ff1554978da0b8a43c95de242765f7"
+              "sha256": "14f43337edfbf7822e091428e4ae0c6f92f86e3353deda6a30f6613121e2cf2d"
             }
           ]
         },
@@ -3323,13 +3313,13 @@
             },
             {
               "path": "scripts/fetch-background.py",
-              "size": 13116,
-              "sha256": "020d4e54bc26595472dc4b5a421830e0e83ffea3f44225fac8ac5f832430e691"
+              "size": 13152,
+              "sha256": "211c1702bf8492c2efa05d44c7012f8eaa47f540f9c0ddd22d30c35fbc54f3d2"
             },
             {
               "path": "scripts/generate-slide.py",
-              "size": 28595,
-              "sha256": "0463c98efea54870816925015fe5819e42a29aaba57408c2c38bacb33e2605b9"
+              "size": 28613,
+              "sha256": "f827767f8f47eb3635d77aaeba700844b3a31e89d9201107f1da59f4d241eb09"
             },
             {
               "path": "scripts/generate-tokens.cjs",
@@ -3338,8 +3328,8 @@
             },
             {
               "path": "scripts/html-token-validator.py",
-              "size": 13187,
-              "sha256": "1242a778493a8fd646da50623d654b783ed8d1b6d4234b3271789eae9f5a4bed"
+              "size": 13219,
+              "sha256": "e876ae1a014a0709bff9798e9a56c27336c0fb04e847e563a053917ef0945d44"
             },
             {
               "path": "scripts/search-slides.py",
@@ -3355,6 +3345,11 @@
               "path": "scripts/slide-token-validator.py",
               "size": 973,
               "sha256": "66da5da5e8e659d405a89b342e13dd1e469e79726c46002d9d2368c3c7aaf945"
+            },
+            {
+              "path": "scripts/tests/test_utf8_io.py",
+              "size": 2615,
+              "sha256": "304f4e3e918eda39e11ad80b80bca81a858264aaa8a4aaec34e2d30e267179b3"
             },
             {
               "path": "scripts/tests/test_validate_tokens.py",
@@ -3661,13 +3656,13 @@
             },
             {
               "path": "scripts/shadcn_add.py",
-              "size": 8799,
-              "sha256": "0c11d28ce9f12217df2c3306f24ae1f73527d5116db63707ab55cbe1a8bcf28c"
+              "size": 8969,
+              "sha256": "c634302efce1ec3aaecf7262c6782280cee6de68177ef11dd2a17fb70b4e3dfc"
             },
             {
               "path": "scripts/tailwind_config_gen.py",
-              "size": 15712,
-              "sha256": "9a81a5e2780650ab613a87d50ffd5caa9be22533f7bac0f8807a7f7214f26471"
+              "size": 15730,
+              "sha256": "7d9f7f459783526baae118e7e6f11c46d1fe039502ec402f31544b520d999bc5"
             },
             {
               "path": "scripts/tests/coverage-ui.json",
@@ -6323,8 +6318,8 @@
       "source": {
         "label": "heygen-com",
         "repo": "heygen-com/hyperframes",
-        "commit": "01c0bf4962fd3cc41a713e37bbd7941774e61c2d",
-        "url": "https://github.com/heygen-com/hyperframes/tree/01c0bf4962fd3cc41a713e37bbd7941774e61c2d/"
+        "commit": "b764a5ffdc9ce14bec63d32ab7b7133578562234",
+        "url": "https://github.com/heygen-com/hyperframes/tree/b764a5ffdc9ce14bec63d32ab7b7133578562234/"
       },
       "skills": [
         {
@@ -7402,8 +7397,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 6167,
-              "sha256": "d9537758a88bf3cbfc5699167742e437a6791c57c0180556c930ec6c3aae0ab6"
+              "size": 6316,
+              "sha256": "0c5b70c4b2b6bf0a4494b3468426b593d8cdc68a5a83eee1d09f41ad9fde31d7"
             }
           ]
         },
@@ -7418,8 +7413,8 @@
             },
             {
               "path": "references/cloud.md",
-              "size": 12080,
-              "sha256": "745b8b923f8870c87a1b60a15d6b82d6b51322a66d1badbb052249ae1964d45c"
+              "size": 13024,
+              "sha256": "791d09c312957b006c8818821074d08f8e427cb4e31c25e1b4c94094238bb7a6"
             },
             {
               "path": "references/cloudrun.md",
@@ -7448,8 +7443,8 @@
             },
             {
               "path": "references/init-and-scaffold.md",
-              "size": 6353,
-              "sha256": "c53d4068e3ca9c6159ff1bba446d5413cee9ac78c6b76842302fedce5b7a3f0a"
+              "size": 6666,
+              "sha256": "9b8d8677880c821e938a7ecc7857e2b624aa73ce63018faa636cf664b32d6314"
             },
             {
               "path": "references/lambda.md",
@@ -7458,13 +7453,13 @@
             },
             {
               "path": "references/lint-validate-inspect.md",
-              "size": 19739,
-              "sha256": "0a6fc73b4644350908438f7dc58a7242732887d2eb6f1cde71ba84955118c416"
+              "size": 20082,
+              "sha256": "5a0198691f1a5fdcbf31286a2e7838eda3640f131a292f737a90bc78cfda60eb"
             },
             {
               "path": "references/preview-render.md",
-              "size": 34432,
-              "sha256": "197e9f8c1d4c8f972e2250fc088dfc7696ecf31bb2ec7eec782fc0eb7a6a3753"
+              "size": 34578,
+              "sha256": "94ffb74052a3733479310595220ee271a23ac3319af82f7bb1adb58e478acb76"
             },
             {
               "path": "references/upgrade-info-misc.md",
@@ -7473,8 +7468,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 7166,
-              "sha256": "cfaa2a4dfc696c48929b2a6115ac16e3c04134cef13bd99050758a2936f3d903"
+              "size": 7615,
+              "sha256": "341c509a4eac5ec32e3e33211904629b8837a0fe49d82fb82273fdf9584d839b"
             }
           ]
         },
@@ -7544,8 +7539,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 4336,
-              "sha256": "0ac5bb49dd7aed66e0d61248eca94e8c9f1a95b482c8004fb0113f724fffe6cd"
+              "size": 4500,
+              "sha256": "843f9459912d464e84aa9cdeb21ec3d2628d444d252e1db13c2f947582792b70"
             }
           ]
         },
@@ -7805,8 +7800,8 @@
             },
             {
               "path": "references/format.md",
-              "size": 13048,
-              "sha256": "babb5d4bfeffa8422c8e3474833a827a2a3dd95d234e8a37c130c4973d360533"
+              "size": 13196,
+              "sha256": "1eae5b314fab5e36e7ff5f41e9a3f95db4b5efb179ad8ef7cc74ef9235d49d62"
             },
             {
               "path": "references/look.md",
@@ -7815,8 +7810,8 @@
             },
             {
               "path": "references/motion.md",
-              "size": 12162,
-              "sha256": "80b9bd70c011b7fc679f351cb41b993b16d610af1cda316eaf9d19bf9c08372f"
+              "size": 12322,
+              "sha256": "7c77857fc45612414345a978457235b59a8d79b74fd0b276b3b14a16e33ccc89"
             },
             {
               "path": "references/overlays.md",
@@ -7824,9 +7819,14 @@
               "sha256": "d87fa3d13e8e0dace593f4aafb68c085b7f4393eee468c7695a74d5665150da3"
             },
             {
+              "path": "references/path-tracing.md",
+              "size": 5762,
+              "sha256": "c45284156bfb77b5151cf6e5b34d47cad8e7da871147e842b4ebe358b187c6b7"
+            },
+            {
               "path": "references/plugin-installation.md",
-              "size": 2706,
-              "sha256": "d3268edd1bbf2bc4e077108462aacff8c04bd2660472dd6ca9fd1bb32839b661"
+              "size": 2656,
+              "sha256": "892b465cc09e9481c605a243305830f82d0298d011271752501175ebc076d1c8"
             },
             {
               "path": "references/review.md",
@@ -7835,13 +7835,13 @@
             },
             {
               "path": "references/runtimes.md",
-              "size": 4019,
-              "sha256": "ace12b068aa573717f68e7e3e2e333bed8fc692ba63434efaaf362073b3463b6"
+              "size": 4188,
+              "sha256": "438b527d08c6aaef96f9750d4be68e8b558aebeb6ce96cf39c5338bd170032e5"
             },
             {
               "path": "references/skill-lifecycle.md",
-              "size": 4213,
-              "sha256": "01f08d645a9faf3e1d2f80f9ad372c32b4b73fd6774ded1ed6d5579e8e477ba1"
+              "size": 4926,
+              "sha256": "58cda8b21e6e6d5e686426510700c0cb58ec5341cb9a8e3e893cc671c99824b4"
             },
             {
               "path": "references/sound.md",
@@ -7865,13 +7865,13 @@
             },
             {
               "path": "references/storyboard.md",
-              "size": 4067,
-              "sha256": "f757c6d2b26e1a3587a63a4a8f9aafab86d9507ed31579f4dda4279397742fe3"
+              "size": 4456,
+              "sha256": "b71197f1234c435e7c91ad22e6ce348542a9e4cddede41dba09c8986edc6598b"
             },
             {
               "path": "references/types/3d.md",
-              "size": 1673,
-              "sha256": "1a8c965d36bac37c5625cd404b37c3d3913632cb858881d89741afacc560ea12"
+              "size": 1805,
+              "sha256": "1194492ec496e2146ae1e772fd5de6e23d850d25523f80ea61540331d748291e"
             },
             {
               "path": "references/types/character.md",
@@ -7925,8 +7925,8 @@
             },
             {
               "path": "scripts/plugin-cli.mjs",
-              "size": 2899,
-              "sha256": "1ec46cdb9d819ecc9367aba719fea9253089617ead8c5454e59ab18b206711fb"
+              "size": 2927,
+              "sha256": "c8b63aa466ce76dc7b40a314fe28f36ac4b71c5e893cb6b24f1a32f55c145132"
             },
             {
               "path": "scripts/plugin-cli.test.mjs",
@@ -7935,8 +7935,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 7165,
-              "sha256": "85ea4a4158acc1d4ca87ab1a6c93521aae77f16023e381561da66c9dd0c37517"
+              "size": 7348,
+              "sha256": "0136848be89c81d7eb27d3c5c052bff3ce1ea4f1391b730a429b75b0448821ec"
             }
           ]
         },
@@ -8081,8 +8081,8 @@
             },
             {
               "path": "audio/references/requirements.md",
-              "size": 4284,
-              "sha256": "fa57aa3855f229d9df6489654455981a5a04d7b05e8e76558be263407fcf5a17"
+              "size": 4482,
+              "sha256": "50b48c6de19617a385cff8dcbfbca0b5187aacd9cc67f8a9ad3c8fa8922f02af"
             },
             {
               "path": "audio/references/sfx.md",
@@ -8101,13 +8101,13 @@
             },
             {
               "path": "audio/references/tts.md",
-              "size": 13890,
-              "sha256": "0811600e8251313fe242ec0b50a622c7f9261bba8062eb3c0a22d691a03a544a"
+              "size": 14005,
+              "sha256": "e7490d588d4ecc6fc0091e44ee698797c623bbb31f921ec06b6efe30ab2b4ba2"
             },
             {
               "path": "audio/scripts/audio.mjs",
-              "size": 13375,
-              "sha256": "f41c88d86aa3c87c41a8edfe1017a41c86ea44a6e5bdd5f5442fb4046c63f8ef"
+              "size": 14563,
+              "sha256": "1219440e848b0e899a3c3a010a8a57dfd72efe2b321ccfc7f5745413e75b992f"
             },
             {
               "path": "audio/scripts/audio.test.mjs",
@@ -8221,13 +8221,13 @@
             },
             {
               "path": "audio/scripts/lib/heygen.mjs",
-              "size": 12455,
-              "sha256": "bc99ecac77f150a330f7064108006c9316da0ccdbc16cfbb4038251eaae2d960"
+              "size": 12959,
+              "sha256": "3db9edb5fdccbccda2c5ba030da054fd1bbb76364f746baa4434543a456b507d"
             },
             {
               "path": "audio/scripts/lib/heygen.test.mjs",
-              "size": 13671,
-              "sha256": "e04aa12300ca45866df0d2a0360ee6f0027ef499b081cf3e431432166085e00d"
+              "size": 15213,
+              "sha256": "47418f26f16903018d6f2bedfda7cf7c8f5bfe2b386ee4459c504eaa689a73a5"
             },
             {
               "path": "audio/scripts/lib/main-module.mjs",
@@ -8236,13 +8236,13 @@
             },
             {
               "path": "audio/scripts/lib/media-record.mjs",
-              "size": 4233,
-              "sha256": "bf904e88b0038b6fbae8b562ff1fc99ff8794383c5b3470773c7692162c948e9"
+              "size": 4284,
+              "sha256": "959bc6b444b35cee55ce9374c36e227caeaa561ac56fadfddf3f82e79aa045db"
             },
             {
               "path": "audio/scripts/lib/media-record.test.mjs",
-              "size": 7835,
-              "sha256": "922738b67e8baa5bbf958ac02e92e3192e51f5b6c66d8bbd3f544151c5a22523"
+              "size": 8541,
+              "sha256": "74824ab8fff9376955222665e4d84d1168c783e417b7feb01609124b3ec4df8b"
             },
             {
               "path": "audio/scripts/lib/openverse.mjs",
@@ -8260,9 +8260,14 @@
               "sha256": "f8e1e5df3977691772605867ebe8ae2d02a8132c1745dfd3cbf6453f351bcc79"
             },
             {
+              "path": "audio/scripts/lib/recording.mjs",
+              "size": 2181,
+              "sha256": "37e8e5b606fd74901da5e486bab7ac41bb7c330a6c11c16d7f5110b9b1eac686"
+            },
+            {
               "path": "audio/scripts/lib/sfx.mjs",
-              "size": 7354,
-              "sha256": "ddd7da6f359011f2aaa9e3b78e62246766be4dedb4825b5c40f2c287c0c2c62c"
+              "size": 7372,
+              "sha256": "5c443cdf72bf14552f23a468e311b273e1448b49aeca385f2484995217f75d3f"
             },
             {
               "path": "audio/scripts/lib/sfx.test.mjs",
@@ -8276,8 +8281,8 @@
             },
             {
               "path": "audio/scripts/lib/tts.mjs",
-              "size": 17473,
-              "sha256": "ffe6b897caf5f1401756897b515850bc4b93641d75bf4f1b6bcf35f0073b0eb7"
+              "size": 17630,
+              "sha256": "edf571b77f25b7de745c08b15d4c66d0cefa8826d556652ded7447e082179ae7"
             },
             {
               "path": "audio/scripts/lib/tts.spawn.test.mjs",
@@ -8286,13 +8291,28 @@
             },
             {
               "path": "audio/scripts/lib/tts.test.mjs",
-              "size": 8292,
-              "sha256": "e19a3f5b8bf8bfb3eb4ad0220ff7b4cfb6d740e3d24f5b96eabdcc6ab4720722"
+              "size": 8889,
+              "sha256": "4b83343efa80c285f945a183ff0cf1a62b19ce7f9faae109fe0f2ae937cbf5aa"
+            },
+            {
+              "path": "audio/scripts/lib/voice-credit.mjs",
+              "size": 686,
+              "sha256": "16a45db14f36ba557654f8104df09481e9d34234aebcb4cdc1ff5213bed3d4e5"
+            },
+            {
+              "path": "audio/scripts/lib/voice-credit.test.mjs",
+              "size": 946,
+              "sha256": "c7f3fccb3767b702ee3e99643fe8a44fa255c5a95999aef1535be6455cd2bd5a"
             },
             {
               "path": "audio/scripts/lyria-recipe.py",
               "size": 5023,
               "sha256": "07bcba4a128430545a03e7ced49b9a6750a77d72a3659d67e4e9886fe9731436"
+            },
+            {
+              "path": "audio/scripts/recording.test.mjs",
+              "size": 4752,
+              "sha256": "601089c12f4d7fca5ed0959a74e6f6937006e509c264d7188357b73e7f6e5d89"
             },
             {
               "path": "audio/scripts/wait-bgm.mjs",
@@ -8316,8 +8336,8 @@
             },
             {
               "path": "references/audio.md",
-              "size": 2435,
-              "sha256": "4c2602fec675b5234b18a0a03ac05aa6c380398c75176c6a071ce683d5107973"
+              "size": 3055,
+              "sha256": "2899b79a2f84c3d4541d410d334f08df1482726748faea6c48493f543121404d"
             },
             {
               "path": "references/grading.md",
@@ -8326,8 +8346,8 @@
             },
             {
               "path": "references/heygen.md",
-              "size": 7290,
-              "sha256": "f7599848c6f816c0cf269b1f746fcbd3b904be3bdecb21ff461fae9cf189ef20"
+              "size": 9178,
+              "sha256": "6d44d94b1fb335062b5ffadf6b08fc6b4af87c0cb836e8e1d711c25b48c7749d"
             },
             {
               "path": "references/local.md",
@@ -8341,8 +8361,8 @@
             },
             {
               "path": "references/media-treatments.md",
-              "size": 14168,
-              "sha256": "2125e106e7f891e14716efabda40f5d6a46284592c6f37d5a14b2b86bda96c1a"
+              "size": 14151,
+              "sha256": "32b9b3bb6fb3838829ff08dc5650b2eb065086b4bd5db9c431e9629a38e93385"
             },
             {
               "path": "references/memory.md",
@@ -8361,18 +8381,18 @@
             },
             {
               "path": "references/operations.md",
-              "size": 15534,
-              "sha256": "f59189bb31501c9b55c45311ac2bf36c8652c17010c5f8a4d81b9274ae84b810"
+              "size": 16077,
+              "sha256": "2d794c051efc7bef188a07612ac33210fa4fc3888428a44101aa18315014b5d2"
             },
             {
               "path": "references/resolve.md",
-              "size": 9605,
-              "sha256": "c90a833f6c3dcc8f33b289f5ad90e9f835f59581873bdc774035f25b6eb72314"
+              "size": 10100,
+              "sha256": "676115ab007793b127ab535c7b26ea1bd3a0a10c21806ceaf595b92eb15b3c2c"
             },
             {
               "path": "references/setup-providers.md",
-              "size": 9329,
-              "sha256": "4aa68405654ad2215f5612bd036a9e14c37133e3c433b5f532dfcd5d57674096"
+              "size": 9331,
+              "sha256": "5cc3c135398435afa6a06e3ba533da871c07d7c5aa2a4dd4d4d5520c119f284b"
             },
             {
               "path": "references/telemetry-dashboard.md",
@@ -8408,6 +8428,11 @@
               "path": "scripts/lib/config-lock.mjs",
               "size": 1520,
               "sha256": "a9d1679e2039be38cd1756a1011f813ae4be0577c2ff77b9ed411b99b1c94275"
+            },
+            {
+              "path": "scripts/lib/credit-limit.mjs",
+              "size": 2044,
+              "sha256": "1699e9136a4f5fbe8e019d5c57932c3d41b880c72f0ebb88c2ad6a50eb9a1e9b"
             },
             {
               "path": "scripts/lib/cutlist.mjs",
@@ -8466,13 +8491,13 @@
             },
             {
               "path": "scripts/lib/telemetry.mjs",
-              "size": 8693,
-              "sha256": "3524441159efd13de22ced004c9e40fe0c241c5ef64cc047f0b567310d6436f0"
+              "size": 8976,
+              "sha256": "b817e192cb6a676db4de3a47058edd858815a0e7fb8d9fb80c150085e9284330"
             },
             {
               "path": "scripts/lib/telemetry.test.mjs",
-              "size": 2233,
-              "sha256": "b7f6513eede2eb33f6fde626162b2fd4ef74b0034a3e81b9eebdede89f766373"
+              "size": 3078,
+              "sha256": "2733285623440cef340ec50e55a6f2d50e330b8122ceef853cf5e670eab6c76e"
             },
             {
               "path": "scripts/lib/transcriptCutFade.mjs",
@@ -8526,8 +8551,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 5116,
-              "sha256": "27953684efc3615938f824371462b2f6085b0e0982ae3667fe0a12ac89d0ebf9"
+              "size": 5251,
+              "sha256": "d059b1686e7f9cd887edda774027d745e7fb319c0a10b21d3e6ba592faa04337"
             }
           ]
         },
@@ -8912,8 +8937,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 5021,
-              "sha256": "ddd074498f7048c0c1c105e3e08411b19432524e16ca14dcccbc1d9dcca5c4af"
+              "size": 5188,
+              "sha256": "8efa3dfedb1e591f7c2f86321faafd390848fb77d95ae8d55791df0544ca6036"
             }
           ]
         },
@@ -8923,8 +8948,8 @@
           "files": [
             {
               "path": "references/animated.md",
-              "size": 2218,
-              "sha256": "2efdd7e5689dd64f85b529988146fdc49735a366991dd3348788af16271bd65e"
+              "size": 2599,
+              "sha256": "98fac6e20f30a0c8b0f5ab22475e7305808e64839876273142f8d1d860f296f2"
             },
             {
               "path": "references/match.md",
@@ -8938,13 +8963,13 @@
             },
             {
               "path": "references/start.md",
-              "size": 3559,
-              "sha256": "d9291748ab64124632afa24b2f0f1fc5a02261f08fc2bdbec753797c4a94e886"
+              "size": 6019,
+              "sha256": "7876577cecd5f7afc0046fa78cd751263f4fd357a388bd788dcf1078c6cf522d"
             },
             {
               "path": "SKILL.md",
-              "size": 5117,
-              "sha256": "5509fb74873d74e5a1cbe8011aa3f25e2c7864fcd3dd12dd7c880920d274bd17"
+              "size": 5275,
+              "sha256": "ce3401b6d90b0411314cc7fac2a2493c16f69986c22b7954de72bf6b48ef65d1"
             }
           ]
         },
@@ -8959,8 +8984,24 @@
             },
             {
               "path": "SKILL.md",
-              "size": 4924,
-              "sha256": "4525f1a0d468f91957b638f14599c37f4af5e00c9b3c4df519a1cbe16101c908"
+              "size": 5077,
+              "sha256": "f4d67791536d8c4689e2cd1aa25330cde43cd924f7ca47e6877ac6bbb280dfe8"
+            }
+          ]
+        },
+        {
+          "name": "style-sampling",
+          "path": "skills/style-sampling",
+          "files": [
+            {
+              "path": "references/remix.md",
+              "size": 11074,
+              "sha256": "36573cfa9455e6850af147fa58c7bf3de5d8da00e5003983253f9cc7bcb1d2cc"
+            },
+            {
+              "path": "SKILL.md",
+              "size": 4633,
+              "sha256": "79ad2126560f3c9c7fb050f330d56f7dbf4ebb1d6a67f934bd483defc3fb380e"
             }
           ]
         }
@@ -9039,8 +9080,8 @@
       "source": {
         "label": "higgsfield-ai",
         "repo": "higgsfield-ai/skills",
-        "commit": "4d0757471a704dac8729ea3c2ef0f3f330e0d9b6",
-        "url": "https://github.com/higgsfield-ai/skills/tree/4d0757471a704dac8729ea3c2ef0f3f330e0d9b6/"
+        "commit": "27000402070db19d958789d05b3b52b6f4718d7c",
+        "url": "https://github.com/higgsfield-ai/skills/tree/27000402070db19d958789d05b3b52b6f4718d7c/"
       },
       "skills": [
         {
@@ -9406,13 +9447,13 @@
             },
             {
               "path": "references/media-inputs.md",
-              "size": 7665,
-              "sha256": "3d5b22ceab693e953cb67dbaeae2d4946421f8b1777505c41b7c700c192684ff"
+              "size": 7855,
+              "sha256": "5abd97c63b1e8af1e8f834f49e85a7e53f4066889aff62c2838d6b1a44215917"
             },
             {
               "path": "references/model-catalog.md",
-              "size": 21761,
-              "sha256": "9b5950846a8d0fe0e8ef6289513efc233ee38e3a0fbc0620b4f9cea04d08fda6"
+              "size": 24115,
+              "sha256": "a863bd4140416d564a489bacdf27f74d805e28d88061a2d842cc0202bd765681"
             },
             {
               "path": "references/prompt-engineering.md",
@@ -9431,8 +9472,8 @@
             },
             {
               "path": "SKILL.md",
-              "size": 24853,
-              "sha256": "9e0f535769258a0f38ba5be964d29cd21a08f05405644861dffe2ae7a246b3c5"
+              "size": 25621,
+              "sha256": "bd1c83b58d9d071befe06b02d888cfff092c5021bb37a50b381e9f763d4a3571"
             }
           ]
         },
@@ -10138,219 +10179,12 @@
       "manual": {
         "install": "npx skills add Leonxlnx/taste-skill\n# só a skill de frontend\nnpx skills add Leonxlnx/taste-skill --skill design-taste-frontend",
         "url": "https://github.com/Leonxlnx/taste-skill",
-        "docs": "https://www.tasteskill.dev/"
+        "docs": "https://www.tasteskill.dev/",
+        "note": "Grande demais para instalar por aqui (1 skills, 34.9 MB): use o comando abaixo."
       },
-      "license": "MIT",
-      "source": {
-        "label": "Leonxlnx",
-        "repo": "Leonxlnx/taste-skill",
-        "commit": "12af471f627f866411b4bd785b19646d3672784c",
-        "url": "https://github.com/Leonxlnx/taste-skill/tree/12af471f627f866411b4bd785b19646d3672784c/"
-      },
-      "skills": [
-        {
-          "name": "design-taste-frontend",
-          "path": "skills/taste-skill",
-          "files": [
-            {
-              "path": "assets/app.css",
-              "size": 15918,
-              "sha256": "16518c3a999fb81b2698137f1f743128c189272e8b1d411c4b02598c6755b67f"
-            },
-            {
-              "path": "assets/base.css",
-              "size": 6520,
-              "sha256": "aa6ea21613c79e06e06dea3d33200c78590c89b0346bb976ec07947bb45ceafa"
-            },
-            {
-              "path": "assets/base.js",
-              "size": 2162,
-              "sha256": "8d50416125596b84c0083d5d5ffba09add57db4b06cbf0eedac2d4999b7653bc"
-            },
-            {
-              "path": "assets/charts.js",
-              "size": 59016,
-              "sha256": "a7e916594729576b7c7e37048a68508a3243fe8fbc9654775cd245232e9f8100"
-            },
-            {
-              "path": "assets/scenes/stage.css",
-              "size": 1141,
-              "sha256": "b5c587dac45ac6fcc34ae7cb4aa2b3e43797b2ef5d71fd32b48483bda3fca3e0"
-            },
-            {
-              "path": "assets/scenes/stage.js",
-              "size": 7691,
-              "sha256": "9ce782a94406e6a230c49ca5f87e56aff9d436da3f56416b1659421f8976bc2b"
-            },
-            {
-              "path": "evals/evals.json",
-              "size": 8198,
-              "sha256": "df0ee2a248cd5445c0e1600eb095dc0d43dd312f5b4bb4316a78471ae0d22a74"
-            },
-            {
-              "path": "library/app.json",
-              "size": 74229,
-              "sha256": "3678ccbe1e8d05feff6d4f07fa16a0d610aefeea5e697e842a876713ba763cf5"
-            },
-            {
-              "path": "library/directions.json",
-              "size": 61466,
-              "sha256": "d71e3824af33a92d9e1ca543e17f80baa5b7a30c815df5125cfe3300a14892c1"
-            },
-            {
-              "path": "library/heroes.json",
-              "size": 108240,
-              "sha256": "98d5e01104412a5fb27936f9c686f3bc0a5f76ce0793186d3de46b982c65b172"
-            },
-            {
-              "path": "library/motions.json",
-              "size": 9033,
-              "sha256": "51815dd09a823c829897f99ed9ea7dc5c35bd305ac989b8a0632ea6d42a3f08b"
-            },
-            {
-              "path": "library/palettes.json",
-              "size": 34753,
-              "sha256": "a14be9f45baba848c53436f4aa44eb4f1925ad3e232c5d1dcddf4f565661a525"
-            },
-            {
-              "path": "library/photos.json",
-              "size": 160632,
-              "sha256": "8fc3b76bca90f44675bd99d99bb4ce95b0756c6c5d4141b7e917d11d90e61520"
-            },
-            {
-              "path": "library/sections.json",
-              "size": 276146,
-              "sha256": "7c2c8a470a22501176948661f803434db8c542a511281752c717252de80c1ad8"
-            },
-            {
-              "path": "library/sites.json",
-              "size": 869073,
-              "sha256": "a2bc4d0cff8ebff481f0dfd4879c106d5e1e16cb3122f9ab3702184a5e1f3502"
-            },
-            {
-              "path": "library/type.json",
-              "size": 82326,
-              "sha256": "dbabf41a468775cf6cc5ea5f3c898b0663293822e167b72b02feba1ef03ebf37"
-            },
-            {
-              "path": "README.md",
-              "size": 5345,
-              "sha256": "5e33fd716b3e1ffaca9340f645d44c193f9b446107fa67f0cce498d33025672c"
-            },
-            {
-              "path": "references/app-screens.md",
-              "size": 85358,
-              "sha256": "55e937ec30de605b53a11310b446f328a3ce7403de24fff008920a00be1a5ed4"
-            },
-            {
-              "path": "references/colour.md",
-              "size": 6853,
-              "sha256": "6556bcc7eed48b7bc2d0d281c28bf57c1b75e94d7ca0bde49f5d9df8c6a09351"
-            },
-            {
-              "path": "references/copy.md",
-              "size": 9436,
-              "sha256": "676edbe75d5f3cfd8a793010ea9f730525ae074b231a674c2426264d3398262e"
-            },
-            {
-              "path": "references/critique.md",
-              "size": 11157,
-              "sha256": "9c2f4392674530b3f02ac529fba53d82ab37b85f401c4c1989fbe98d6217f0b4"
-            },
-            {
-              "path": "references/imagery.md",
-              "size": 51025,
-              "sha256": "518def6b2c643b295e13e66b09b66f2e3fc1421d3cf6c7dbb1dc749097ad2ad9"
-            },
-            {
-              "path": "references/layout.md",
-              "size": 18315,
-              "sha256": "40080640719b07737afb94a8868afef87767a1ab4892814d9b6882e2d283453b"
-            },
-            {
-              "path": "references/motion.md",
-              "size": 55400,
-              "sha256": "79f94d8469898d2bf6186c198ad86ddf691a67c6536eaec36a4ec101285d9a37"
-            },
-            {
-              "path": "references/research.md",
-              "size": 24262,
-              "sha256": "83433646a352cae588591e05bc0a75fe1deadff55ede8851bc8dd5dd483adfc5"
-            },
-            {
-              "path": "references/scenes.md",
-              "size": 9817,
-              "sha256": "733ac7258a1a28f2f6ae8205bc36ba66c563594ad0a2e2f829c5eaaba3199a61"
-            },
-            {
-              "path": "references/tells.md",
-              "size": 7420,
-              "sha256": "8e6de4411c43d3108f832b3f33bb1a2a838148a72b92a176df893b67d99a0da9"
-            },
-            {
-              "path": "references/type.md",
-              "size": 8495,
-              "sha256": "6353ff1d0ce2f9913628c88fbcb7dad3cc3877e61196848bce99e33a17d20611"
-            },
-            {
-              "path": "scripts/assets.mjs",
-              "size": 64522,
-              "sha256": "b4b4b99b5634735f5a0b4213169cda5240ee6bbed8ed8042ad1bcf2b6607c1fa"
-            },
-            {
-              "path": "scripts/draw.mjs",
-              "size": 54140,
-              "sha256": "6c2047d207d2400d3b099956dfe2ac306203b614246e66bc8760212a7f797dbf"
-            },
-            {
-              "path": "scripts/inspect.mjs",
-              "size": 28853,
-              "sha256": "c0d7366f789b3f594787b37a525d1d7096104a499aac8a97ae04b405046cf02c"
-            },
-            {
-              "path": "scripts/lib/app-draw.mjs",
-              "size": 14715,
-              "sha256": "aa0802d341d19b53ec14ec21746e428be49a8ec3ed7b30253194105fc18a8df6"
-            },
-            {
-              "path": "scripts/lib/cdp.mjs",
-              "size": 11920,
-              "sha256": "320fb75c6454a97b88458e5c33559a1188042aa0041bd5eff53455900236c88a"
-            },
-            {
-              "path": "scripts/lib/inspection-files.mjs",
-              "size": 478,
-              "sha256": "5635c0d5fbe0f5bd012e58534bcd554ff7440a4e5c724a61a61c476c7f42e918"
-            },
-            {
-              "path": "scripts/lib/probe.mjs",
-              "size": 82552,
-              "sha256": "a5a17df891e438f55f196d8233601c3c79c873755f442c1ac5c3568de4e6bb48"
-            },
-            {
-              "path": "scripts/lib/rules.mjs",
-              "size": 37298,
-              "sha256": "8244aa9f53e77a59a562410310414e6b1a0f0cf002ce8f5aa792740b7f0149bf"
-            },
-            {
-              "path": "scripts/lint.mjs",
-              "size": 11747,
-              "sha256": "05f2fae2f56fc051b539cdbacb43a6f78fbbfb9644bb74aa11be472ff12dcaf5"
-            },
-            {
-              "path": "scripts/scenes.mjs",
-              "size": 8980,
-              "sha256": "234ec582e2b841457c33033feeeba8535f9ac285495a74d08dc533a1566c90d5"
-            },
-            {
-              "path": "SKILL.md",
-              "size": 39537,
-              "sha256": "3435ed963b15a1b6447746ec8844ab2cd38d8d2e8ead3451937f42df01e408c4"
-            }
-          ]
-        }
-      ],
-      "hasScripts": true
+      "skills": [],
+      "hasScripts": false,
+      "license": ""
     },
     {
       "id": "refs/refero-styles",
@@ -10825,8 +10659,8 @@
       "source": {
         "label": "coreyhaines31",
         "repo": "coreyhaines31/marketingskills",
-        "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
-        "url": "https://github.com/coreyhaines31/marketingskills/tree/88c79f6528a9347420e57ceb1fff9a60de651768/skills/seo-audit"
+        "commit": "96798cf38736ecdba015a1d2b0521b0c8f8f41dd",
+        "url": "https://github.com/coreyhaines31/marketingskills/tree/96798cf38736ecdba015a1d2b0521b0c8f8f41dd/skills/seo-audit"
       },
       "skills": [
         {
@@ -10901,7 +10735,7 @@
       "manual": {
         "install": "# Claude Code (marketplace da Trail of Bits)\n/plugin marketplace add trailofbits/skills\n/plugin menu   # ative differential-review, insecure-defaults, fp-check, etc.\n# Codex, Cursor e outros agentes\nnpx skills add trailofbits/skills",
         "url": "https://github.com/trailofbits/skills",
-        "note": "Grande demais para instalar por aqui (97 skills, 4.6 MB): use o comando abaixo."
+        "note": "Grande demais para instalar por aqui (98 skills, 4.7 MB): use o comando abaixo."
       },
       "skills": [],
       "hasScripts": false,
@@ -10926,8 +10760,8 @@
       "source": {
         "label": "anthropics",
         "repo": "anthropics/claude-plugins-official",
-        "commit": "a7ba5b93db0c7c8d17f3f1d25853adca79598a1a",
-        "url": "https://github.com/anthropics/claude-plugins-official/tree/a7ba5b93db0c7c8d17f3f1d25853adca79598a1a/plugins/claude-security"
+        "commit": "0412be76f50ab4f4f8abff3753efa9269fbbca5b",
+        "url": "https://github.com/anthropics/claude-plugins-official/tree/0412be76f50ab4f4f8abff3753efa9269fbbca5b/plugins/claude-security"
       },
       "skills": [
         {
@@ -11021,8 +10855,8 @@
       "source": {
         "label": "vercel-labs",
         "repo": "vercel-labs/skills",
-        "commit": "51b9062b3fc51dc04c89ab92dbeb65681fa0cb25",
-        "url": "https://github.com/vercel-labs/skills/tree/51b9062b3fc51dc04c89ab92dbeb65681fa0cb25/"
+        "commit": "d3701c11b1101251af14c9d148f026e1a47ebe17",
+        "url": "https://github.com/vercel-labs/skills/tree/d3701c11b1101251af14c9d148f026e1a47ebe17/"
       },
       "skills": [
         {
@@ -11044,6 +10878,28 @@
               "path": "SKILL.md",
               "size": 7613,
               "sha256": "b512d5d237bf8669d8200049538cfe40c4bdc98586097cafaaa62fe6df838d12"
+            }
+          ]
+        },
+        {
+          "name": "pr-labeling-2",
+          "path": ".vc/automations/workflows/pr-labeling/skills/pr-labeling",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 1237,
+              "sha256": "1f794aeb1e5110008980aff363197f8cf3e37c71eedc498d7c56dc8e7bfbc5a5"
+            }
+          ]
+        },
+        {
+          "name": "triage-2",
+          "path": ".vc/automations/workflows/triage/skills/triage",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 7502,
+              "sha256": "b538eb23a1e99eaae524032254cd8ae11fb086061123517e35eed1bd41b1c89c"
             }
           ]
         },
@@ -11147,9 +11003,165 @@
       "manual": {
         "url": "https://github.com/joel1fps/skilss-juridicas"
       },
-      "skills": [],
-      "hasScripts": false,
-      "license": ""
+      "license": "desconhecida",
+      "source": {
+        "label": "joel1fps",
+        "repo": "joel1fps/skilss-juridicas",
+        "commit": "448577322e274a004297cd2ef5fa8bbab8de3da1",
+        "url": "https://github.com/joel1fps/skilss-juridicas/tree/448577322e274a004297cd2ef5fa8bbab8de3da1/",
+        "private": true
+      },
+      "skills": [
+        {
+          "name": "analise-processual",
+          "path": "skills/analise-processual",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 14595,
+              "sha256": "108fa1f5058ac38c5601c55fd509e5af994521ac5afd59ca0e59ca0f74da0fd8"
+            }
+          ]
+        },
+        {
+          "name": "embargos-de-declaracao",
+          "path": "skills/embargos-de-declaracao",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 6331,
+              "sha256": "a67f1ff948135b192be26b98cbab530f2b07eb38211addbb2ae9e9227ca8a345"
+            }
+          ]
+        },
+        {
+          "name": "execucao-penal-senior",
+          "path": "skills/execucao-penal-senior",
+          "files": [
+            {
+              "path": "CHECKLIST-DOCUMENTOS.md",
+              "size": 2778,
+              "sha256": "cfc769f62337ccef793a11d61d850ead98cce6141e824cf7a48f03896757c2f9"
+            },
+            {
+              "path": "METODO-DE-CALCULO.md",
+              "size": 3638,
+              "sha256": "c5fe4af62304c0b95e295f164df52be7a700f7947b70bba3523d4eed9b6260f3"
+            },
+            {
+              "path": "MODELO-RELATORIO.md",
+              "size": 2003,
+              "sha256": "6af48e5b5fa37ea0072e580c678f447558c30f23b37cadbe29df9559a1db506c"
+            },
+            {
+              "path": "README.md",
+              "size": 1312,
+              "sha256": "f68bab444178199cf8696b95d514df9d6fe8fae992405871a00dd6e154a9aca9"
+            },
+            {
+              "path": "REFERENCIAS-JURIDICAS.md",
+              "size": 7552,
+              "sha256": "2f500dc747adc184da36c7b2524298535c325ce78e616ca20f3233fa35211ea0"
+            },
+            {
+              "path": "SKILL.md",
+              "size": 13138,
+              "sha256": "9bd86e93fa18ccf1fa1d1c32ca3f8f968b24d28df5e840f2729abd9fadfa50ac"
+            },
+            {
+              "path": "TESTES.md",
+              "size": 2394,
+              "sha256": "233701f1d918942c698a235fc0f040032db22d0fcedc767574223e44a02365c3"
+            }
+          ]
+        },
+        {
+          "name": "memoriais-alegacoes-finais",
+          "path": "skills/memoriais-alegacoes-finais",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 33673,
+              "sha256": "577244f0a07dbdc64846b4f2243d17b5393962ac19a04d7834bc3a3ca4facf55"
+            }
+          ]
+        },
+        {
+          "name": "prompt-mestre-an-lise-integral-de-pris-o-preventiva-revoga-o",
+          "path": "skills/prompt-mestre-análise-integral-de-prisão-preventiva-revogação",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 12727,
+              "sha256": "67455f616a792f993390a9b319251eabf7b521c8f730a3ca0781d56f90f22e9c"
+            }
+          ]
+        },
+        {
+          "name": "rcl-stf",
+          "path": "skills/rcl-stf",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 7077,
+              "sha256": "472b21e6515a0c6d3ea905b9367984e2561b01d7b93c5ddde6456f3281e68c78"
+            }
+          ]
+        },
+        {
+          "name": "recursos-tribunais-superiores",
+          "path": "skills/recursos-tribunais-superiores",
+          "files": [
+            {
+              "path": "reference/01-relevancia-lei-15484.md",
+              "size": 7274,
+              "sha256": "200a8a9c88e2e2bbdb88515f414f18b5c515215519e579f4ef0b3d8fa50f66fd"
+            },
+            {
+              "path": "reference/02-admissibilidade-e-vias.md",
+              "size": 13104,
+              "sha256": "68c6d38c784dc8aad96359a77a8f5b6a32e75721098d60bad3e67c60cd5ad304"
+            },
+            {
+              "path": "reference/03-sumulas.md",
+              "size": 6270,
+              "sha256": "79f5e9a336fd4a7c21ce54fbf1b0df29482dde52a566a522323290b22a2e748b"
+            },
+            {
+              "path": "reference/04-ristj-er53.md",
+              "size": 6721,
+              "sha256": "eb1a0b4bedcdec45dfca8e2d2189ccd66f323565e6311dcdb5016ad91610c14e"
+            },
+            {
+              "path": "reference/05-teses-criminais.md",
+              "size": 8135,
+              "sha256": "6f450734e7d2ec31b0900da2397a5776fa2b79007a9de0d1b7c6209fddccb69f"
+            },
+            {
+              "path": "reference/06-estrutura-e-checklists.md",
+              "size": 7204,
+              "sha256": "40f89881f00870d5f657ddd4824951c243fe1306c5a6f7c76ebe9a5e88fe37f9"
+            },
+            {
+              "path": "SKILL.md",
+              "size": 7787,
+              "sha256": "38fb4302d28bde4c2c2b9a22f089fe234d1afb6f76e4fe4005be0a74366a683f"
+            }
+          ]
+        },
+        {
+          "name": "revisao-criminal",
+          "path": "skills/revisao-criminal",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 15109,
+              "sha256": "1704faae728f526920ce51c5d08d9d34624da57d2d9ba83af4910d7482db94e4"
+            }
+          ]
+        }
+      ],
+      "hasScripts": false
     },
     {
       "id": "refs/login-stack",

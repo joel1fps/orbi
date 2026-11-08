@@ -262,6 +262,7 @@ function Detail({
       <div className="arsenal__meta arsenal__origin">
         {skill.origin === 'refs' ? 'Do seu site de referências' : 'Curadoria do Orbi'}
         {skill.source ? ` · ${skill.source.repo} · commit ${short(skill.source.commit)}` : ''}
+        {skill.source?.private ? ' · repositório privado (precisa do GitHub conectado)' : ''}
         {skill.license ? ` · licença ${skill.license}` : ''}
       </div>
 

@@ -56,6 +56,11 @@ export function startDebugServer() {
         res.writeHead(200).end('ok');
         return;
       }
+      if (url.pathname === '/tab') {
+        send('orbi:command', { type: 'open-tab', tab: url.searchParams.get('t') ?? 'home' });
+        res.writeHead(200).end('ok');
+        return;
+      }
       if (url.pathname === '/gpu') {
         const info = await app.getGPUInfo('basic');
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ status: app.getGPUFeatureStatus(), info }));

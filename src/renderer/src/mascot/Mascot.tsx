@@ -80,6 +80,71 @@ export function Mascot({ size, interactive = false, flat = false, className = ''
       )}
       <BadgeDot kind={mood.badge} size={size} />
       {!reduceMotion ? <ParticleLayer kind={mood.particles} burstKey={reaction?.key ?? 0} size={size} /> : null}
+      {!reduceMotion && mood.working && size >= 70 ? <CodeGlyphs size={size} /> : null}
+      {!reduceMotion && mood.action?.name === 'enter' ? <Arrival key={mood.action.key} size={size} /> : null}
+    </div>
+  );
+}
+
+// ---------- arrival & typing ----------
+
+/**
+ * The entrance: a beam lands where Orbi will stand, a portal ring opens at
+ * its feet as it drops in, and a little "Oi!" pops up once it has landed.
+ */
+function Arrival({ size }: { size: number }) {
+  return (
+    <div className="particles" aria-hidden="true">
+      <motion.span
+        className="arrival__beam"
+        style={{ left: size * 0.32, width: size * 0.36, height: size * 0.95, top: -size * 0.05 }}
+        initial={{ opacity: 0, scaleX: 0.2 }}
+        animate={{ opacity: [0, 0.85, 0], scaleX: [0.2, 1, 0.6] }}
+        transition={{ duration: 1.1, times: [0, 0.35, 1], ease: 'easeOut' }}
+      />
+      <motion.span
+        className="arrival__ring"
+        style={{ left: size * 0.18, width: size * 0.64, height: size * 0.16, top: size * 0.84 }}
+        initial={{ opacity: 0, scale: 0.1 }}
+        animate={{ opacity: [0, 1, 0], scale: [0.1, 1.15, 1.35] }}
+        transition={{ duration: 1.4, delay: 0.35, times: [0, 0.4, 1], ease: 'easeOut' }}
+      />
+      {size >= 70 ? (
+        <motion.span
+          className="arrival__hello"
+          style={{ left: size * 0.66, top: size * 0.02, fontSize: Math.max(11, size * 0.085) }}
+          initial={{ opacity: 0, scale: 0.4, y: 6 }}
+          animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1.08, 1, 0.9], y: [6, 0, 0, -6] }}
+          transition={{ duration: 1.9, delay: 1.05, times: [0, 0.15, 0.8, 1] }}
+        >
+          Oi!
+        </motion.span>
+      ) : null}
+    </div>
+  );
+}
+
+const GLYPHS = ['</>', '{ }', '( )', '=>', '01', ';'];
+
+/** While an agent works: bits of code drift up from the notebook. Stepped CSS, a few frames each. */
+function CodeGlyphs({ size }: { size: number }) {
+  return (
+    <div className="particles" aria-hidden="true">
+      {GLYPHS.map((g, i) => (
+        <span
+          key={g}
+          className="glyph"
+          style={{
+            // Beside the head, alternating sides, so they never cross the face.
+            left: size * (i % 2 ? 0.76 + (i % 3) * 0.04 : 0.06 + (i % 3) * 0.04),
+            top: size * (0.5 + (i % 3) * 0.06),
+            fontSize: Math.max(8, size * 0.07),
+            animationDelay: `${i * 0.62}s`,
+          }}
+        >
+          {g}
+        </span>
+      ))}
     </div>
   );
 }

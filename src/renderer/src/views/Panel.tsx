@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronUp, FolderOpen, House, LayoutGrid, Radio, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, FolderGit2, FolderOpen, House, LayoutGrid, Radio, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
 import { ago, BUILTIN_TOOLS, isBuiltin, until } from '@shared/tools';
 import type { AgentSession, CiState, PlanUsage, ToolStatus } from '@shared/types';
 import { SimTag, ToolFace } from '../components/ui';
@@ -8,6 +8,7 @@ import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
 import { PermissionCard } from './PermissionCard';
 import { ArsenalSheet } from './Arsenal';
+import { GithubSheet } from './GitHub';
 import { AgentTabs, useAgentView } from './agents';
 import { LiveSession } from './Live';
 import { SettingsSheet } from './Settings';
@@ -18,7 +19,7 @@ export function Panel() {
   return (
     <div className={tab === 'home' ? 'panel' : tab === 'live' ? 'live' : 'sheet'}>
       <PanelHead />
-      {tab === 'home' ? <Home /> : tab === 'live' ? <LiveSession /> : tab === 'arsenal' ? <ArsenalSheet /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
+      {tab === 'home' ? <Home /> : tab === 'live' ? <LiveSession /> : tab === 'arsenal' ? <ArsenalSheet /> : tab === 'github' ? <GithubSheet /> : tab === 'tools' ? <ToolsSheet /> : <SettingsSheet />}
     </div>
   );
 }
@@ -27,6 +28,8 @@ function PanelHead() {
   const tab = useApp((s) => s.tab);
   const setTab = useApp((s) => s.setTab);
   const setView = useApp((s) => s.setView);
+  // The GitHub tab appears once GitHub is connected (a token in Ferramentas or the GitHub CLI).
+  const github = useApp((s) => s.hub.github?.ok === true);
 
   return (
     <div className="panel__head">
@@ -36,6 +39,11 @@ function PanelHead() {
       <button className="tab" aria-pressed={tab === 'arsenal'} aria-label="Arsenal de Skills" title="Arsenal de Skills" onClick={() => setTab('arsenal')}>
         <Swords size={15} />
       </button>
+      {github || tab === 'github' ? (
+        <button className="tab" aria-pressed={tab === 'github'} aria-label="Projetos do GitHub" title="Projetos do GitHub" onClick={() => setTab('github')}>
+          <FolderGit2 size={15} />
+        </button>
+      ) : null}
       <button className="tab" aria-pressed={tab === 'tools'} aria-label="Ferramentas" title="Ferramentas" onClick={() => setTab('tools')}>
         <LayoutGrid size={15} />
       </button>

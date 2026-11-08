@@ -15,7 +15,8 @@
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseFrontmatter, validateManifest } from '../src/main/skills/logic.ts';
@@ -74,12 +75,47 @@ function commitOf(repo, ref) {
 }
 
 const trees = new Map();
+/** Private repositories (the API answers 404 without a login) are read from a shallow clone, with your git login. */
+const clones = new Map();
+const CLONES = join(tmpdir(), 'orbi-skills-index');
+
+function cloneOf(repo, commit) {
+  const key = `${repo}@${commit}`;
+  if (!clones.has(key)) {
+    const dir = join(CLONES, repo.replace('/', '__'));
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    const git = (...args) => execFileSync('git', args, { cwd: dir, timeout: 120_000, stdio: ['ignore', 'pipe', 'pipe'] });
+    git('init', '-q');
+    git('fetch', '-q', '--depth', '1', `https://github.com/${repo}`, commit);
+    git('-c', 'core.autocrlf=false', 'checkout', '-q', 'FETCH_HEAD');
+    clones.set(key, dir);
+  }
+  return clones.get(key);
+}
+
 async function treeOf(repo, commit) {
   const key = `${repo}@${commit}`;
   if (!trees.has(key)) {
     const res = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commit}?recursive=1`, {
       headers: { accept: 'application/vnd.github+json', 'user-agent': 'orbi-skills-index' },
     });
+    if (res.status === 404) {
+      const dir = cloneOf(repo, commit);
+      const blobs = [];
+      const walk = (abs, rel) => {
+        for (const e of readdirSync(abs, { withFileTypes: true })) {
+          if (!rel && e.name === '.git') continue;
+          const r = rel ? `${rel}/${e.name}` : e.name;
+          if (e.isDirectory()) walk(join(abs, e.name), r);
+          else if (e.isFile()) blobs.push({ path: r, size: statSync(join(abs, e.name)).size });
+        }
+      };
+      walk(dir, '');
+      trees.set(key, blobs);
+      console.log(`  ${repo}: privado, lido de um clone local`);
+      return blobs;
+    }
     if (!res.ok) throw new Error(`${res.status} tree of ${repo}`);
     const body = await res.json();
     if (body.truncated) throw new Error(`tree of ${repo} is truncated`);
@@ -89,6 +125,8 @@ async function treeOf(repo, commit) {
 }
 
 async function raw(repo, commit, path) {
+  const clone = clones.get(`${repo}@${commit}`);
+  if (clone) return readFileSync(join(clone, ...path.split('/')));
   const url = `https://raw.githubusercontent.com/${repo}/${commit}/${path.split('/').map(encodeURIComponent).join('/')}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${res.status} ${url}`);
@@ -138,7 +176,8 @@ async function skillsIn(repo, commit, layout) {
     let skillMd = '';
     for (const b of own) {
       const rel = dir === '.' ? b.path : b.path.slice(dir.length + 1);
-      const bytes = await raw(repo, commit, b.path);
+      // raw.githubusercontent.com answers 501 for empty files.
+      const bytes = b.size === 0 ? Buffer.alloc(0) : await raw(repo, commit, b.path);
       files.push({ path: rel, size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
       if (rel === 'SKILL.md') skillMd = bytes.toString('utf8');
     }
@@ -250,7 +289,13 @@ if (existsSync(refsFile)) {
       packages.push({
         ...base,
         license: await licenseOf(gh.repo, commit, blobs, gh.path),
-        source: { label: gh.repo.split('/')[0], repo: gh.repo, commit, url: `https://github.com/${gh.repo}/tree/${commit}/${gh.path}` },
+        source: {
+          label: gh.repo.split('/')[0],
+          repo: gh.repo,
+          commit,
+          url: `https://github.com/${gh.repo}/tree/${commit}/${gh.path}`,
+          ...(clones.has(`${gh.repo}@${commit}`) ? { private: true } : {}),
+        },
         skills: skills.map(({ description: _d, ...s }) => s),
         hasScripts: hasScripts(skills),
       });
@@ -262,6 +307,7 @@ if (existsSync(refsFile)) {
   }
 } else console.warn(`references site not found at ${refsDir}; only the curated skills`);
 
+rmSync(CLONES, { recursive: true, force: true });
 writeFileSync(OUT, JSON.stringify({ version: 2, generatedAt: new Date().toISOString(), packages }, null, 2) + '\n');
 const installable = packages.filter((p) => p.skills.length > 0);
 console.log(`${packages.length} packages (${installable.length} installable, ${installable.reduce((n, p) => n + p.skills.length, 0)} skills) → ${OUT}`);

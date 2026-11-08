@@ -294,6 +294,16 @@ function GithubRows() {
           Criar token <ExternalLink size={12} />
         </button>
       </div>
+      {!settings.githubTokenSet ? (
+        <div className="row">
+          <div className="row__main">
+            <div className="row__sub row__sub--wrap">Ou use o login do GitHub que o Git deste PC já guarda (o mesmo do git push). Ele fica salvo com a criptografia do sistema.</div>
+          </div>
+          <button className="btn" onClick={() => void window.orbi.githubFromGit().then((r) => setMsg(r.message))}>
+            Usar o login do Git
+          </button>
+        </div>
+      ) : null}
       <div className="row">
         <div className="row__main">
           <div className="row__title" style={{ fontWeight: 500, fontSize: 12.5 }}>

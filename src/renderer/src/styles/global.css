@@ -1708,3 +1708,132 @@ button {
 .reduce-motion *::after {
   transition-duration: 0ms !important;
 }
+
+/* ---------- GitHub tab ---------- */
+.gh__search {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.gh__search > svg {
+  position: absolute;
+  left: 10px;
+  color: var(--faint);
+  pointer-events: none;
+}
+.gh__search .field {
+  flex: 1;
+  padding-left: 30px;
+}
+.gh__avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex: none;
+}
+.gh__avatar--big {
+  width: 26px;
+  height: 26px;
+}
+.gh__owner {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--faint);
+}
+.gh__lock {
+  flex: none;
+  color: var(--amber);
+}
+.gh__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+.gh__stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: var(--faint);
+}
+.gh__progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 2px 4px;
+}
+.gh__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.gh__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+  transition: width 240ms var(--ease);
+}
+.gh__phase {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- mascot: arrival and typing ---------- */
+.arrival__beam {
+  position: absolute;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(94, 234, 212, 0), rgba(94, 234, 212, 0.55) 55%, rgba(217, 255, 246, 0.85));
+  filter: blur(3px);
+  transform-origin: bottom center;
+}
+.arrival__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(94, 234, 212, 0.9);
+  box-shadow:
+    0 0 10px rgba(94, 234, 212, 0.7),
+    inset 0 0 8px rgba(163, 230, 53, 0.55);
+}
+.arrival__hello {
+  position: absolute;
+  padding: 2px 8px;
+  border-radius: 10px 10px 10px 3px;
+  background: #f5fffb;
+  color: #13201c;
+  font-family: var(--font-display);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+.glyph {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--teal-light);
+  opacity: 0;
+  white-space: nowrap;
+  animation: glyph 3.7s steps(30) infinite;
+}
+@keyframes glyph {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(6px, -40px) scale(1.05);
+  }
+}

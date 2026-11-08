@@ -56,6 +56,14 @@ async function ghToken(): Promise<string | null> {
   });
 }
 
+/** The login Orbi uses for GitHub: the token saved in Orbi, else the GitHub CLI's. */
+export async function githubAuth(): Promise<{ token: string; via: GithubSnapshot['via'] } | null> {
+  const saved = store.getGithubToken();
+  if (saved) return { token: saved, via: 'token' };
+  const gh = await ghToken();
+  return gh ? { token: gh, via: 'gh' } : null;
+}
+
 let timer: NodeJS.Timeout | null = null;
 let inflight: Promise<void> | null = null;
 
@@ -68,16 +76,12 @@ export function refreshGithub(): Promise<void> {
 }
 
 async function doRefresh() {
-  let token = store.getGithubToken();
-  let via: GithubSnapshot['via'] = 'token';
-  if (!token) {
-    token = await ghToken();
-    via = 'gh';
-  }
-  if (!token) {
+  const auth = await githubAuth();
+  if (!auth) {
     hub.setGithub(undefined);
     return;
   }
+  const { token, via } = auth;
   const repo = store.settings.githubRepo.trim();
   const [owner, name] = repo.includes('/') ? repo.split('/', 2) : ['', ''];
   try {

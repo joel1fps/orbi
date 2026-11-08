@@ -21,6 +21,10 @@ const C = {
   ringBack: '#3ea591',
   ringHi: '#7ed5c3',
   shadow: '#101513',
+  lid: '#2a3532',
+  lidEdge: '#1b2321',
+  deck: '#3a4744',
+  deckHi: '#566764',
 };
 
 type EyeShape = 'open' | 'wide' | 'happy' | 'closed';
@@ -271,7 +275,13 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
   const tipL = useRef<SVGCircleElement>(null);
   const tipR = useRef<SVGCircleElement>(null);
   const twinkle = useRef<SVGPathElement>(null);
+  const lapRef = useRef<SVGGElement>(null);
+  const pawL = useRef<SVGGElement>(null);
+  const pawR = useRef<SVGGElement>(null);
+  const screenGlow = useRef<SVGEllipseElement>(null);
   const boostUntil = useRef(0);
+  // 0 = notebook put away, 1 = on the lap: slides in when an agent starts working.
+  const lap = useMotionValue(working ? 1 : 0);
   const live = useRef({ working, sleeping });
   live.current = { working, sleeping };
 
@@ -283,12 +293,29 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
     const k = 1 + hop.get() / 40; // hop is negative in the air
     return `translate(60 110) scale(${k} ${k}) translate(-60 -110)`;
   });
-  useTransformAttr(faceRef, [lookX, lookY], () => `translate(${lookX.get() * 2.4} ${lookY.get() * 1.8})`, budget);
-  useTransformAttr(eyesRef, [lookX, lookY], () => `translate(${lookX.get() * 1.5} ${lookY.get() * 1.3})`, budget);
+  // While typing, the face and eyes dip a little toward the screen.
+  useTransformAttr(faceRef, [lookX, lookY, lap], () => `translate(${lookX.get() * 2.4} ${lookY.get() * 1.8 + lap.get() * 1.2})`, budget);
+  useTransformAttr(eyesRef, [lookX, lookY, lap], () => `translate(${lookX.get() * 1.5} ${lookY.get() * 1.3 + lap.get() * 1.1})`, budget);
   useTransformAttr(armRRef, [armR], () => `rotate(${armR.get()} 89 63)`);
   useTransformAttr(armLRef, [armL], () => `rotate(${armL.get()} 33 70)`);
   useTransformAttr(antLRef, [antL, lookX], () => `rotate(${antL.get() - lookX.get() * 4} 42 33)`, budget);
   useTransformAttr(antRRef, [antR, lookX], () => `rotate(${antR.get() - lookX.get() * 4} 78 33)`, budget);
+  useTransformAttr(lapRef, [lap], () => `translate(0 ${(1 - lap.get()) * 26})`, budget);
+  useEffect(() => {
+    if (still) return void lap.set(working ? 1 : 0);
+    const c = animate(lap, working ? 1 : 0, working ? { type: 'spring', stiffness: 260, damping: 20 } : { duration: 0.35, ease: 'easeIn' });
+    return () => c.stop();
+  }, [working, still, lap]);
+  useEffect(() => {
+    // The notebook fades with its slide; the resting paws hand over to the typing ones.
+    const apply = (v: number) => {
+      lapRef.current?.setAttribute('opacity', String(Math.min(1, v * 1.6)));
+      armLRef.current?.setAttribute('opacity', String(1 - Math.min(1, v * 2)));
+      armRRef.current?.setAttribute('opacity', String(1 - Math.min(1, v * 2)));
+    };
+    apply(lap.get());
+    return lap.on('change', apply);
+  }, [lap]);
   // Ambient life: one capped-FPS clock drives breathing, antennae, arm, tip
   // glow and the satellite. Skipped entirely in the pill.
   useEffect(() => {
@@ -335,6 +362,15 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
       tipL.current?.setAttribute('opacity', (0.25 + (0.65 * (1 - Math.cos((TAU * t) / gp))) / 2).toFixed(3));
       tipR.current?.setAttribute('opacity', (0.25 + (0.65 * (1 + Math.cos((TAU * t) / gp))) / 2).toFixed(3));
       if (ambient === 'full') twinkle.current?.setAttribute('opacity', (0.2 + (0.7 * (1 - Math.cos((TAU * t) / 3.2))) / 2).toFixed(3));
+      if (w) {
+        // Typing: the paws take turns on the keys, with a short pause now and then; the screen light flickers on the face.
+        const beat = t * 6.5;
+        const pause = Math.sin(t * 0.9) > 0.82;
+        const tap = (k: number) => (pause ? 0 : Math.max(0, Math.sin(beat * Math.PI + k)) * 2.4);
+        pawL.current?.setAttribute('transform', `translate(0 ${-tap(0).toFixed(2)})`);
+        pawR.current?.setAttribute('transform', `translate(0 ${-tap(Math.PI).toFixed(2)})`);
+        screenGlow.current?.setAttribute('opacity', (0.32 + 0.12 * Math.sin(t * 7.3) * Math.sin(t * 2.1)).toFixed(3));
+      }
     };
     raf = requestAnimationFrame(loop);
     return () => {
@@ -441,6 +477,10 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
           <stop offset="0" stopColor={C.aqua} stopOpacity="0.85" />
           <stop offset="1" stopColor={C.aqua} stopOpacity="0" />
         </radialGradient>
+        <radialGradient id="o2d-screen" cy="0.75">
+          <stop offset="0" stopColor="#d9fff6" stopOpacity="0.95" />
+          <stop offset="1" stopColor={C.aqua} stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       <g ref={shadowRef}>
@@ -519,6 +559,25 @@ export const Orbi2D = memo(function Orbi2D({ size, ambient, expression, action, 
           <circle r={2.2} fill="#fff" />
         </g>
         <path ref={twinkle} d="M 33 46 Q 35 48 37 46 Q 35 44 33 46 Z" fill="#fff" opacity={0.7} />
+
+        {/* Notebook on the lap while an agent works: the lid faces Orbi, so we see its back and the light on Orbi's face */}
+        <g ref={lapRef}>
+          <ellipse ref={screenGlow} cx={60} cy={63} rx={27} ry={13} fill="url(#o2d-screen)" opacity={0.34} />
+          <rect x={33} y={71} width={54} height={29} rx={4.5} fill={C.lidEdge} />
+          <rect x={34.6} y={72.6} width={50.8} height={25.8} rx={3.4} fill={C.lid} />
+          <circle cx={60} cy={85.4} r={4.4} fill="none" stroke={C.aqua} strokeWidth={1.4} opacity={0.85} />
+          <circle cx={63.6} cy={82.8} r={1.3} fill={C.sun} />
+          <rect x={26} y={98.6} width={68} height={5.6} rx={2.6} fill={C.deck} />
+          <rect x={28} y={98.6} width={64} height={1.4} rx={0.7} fill={C.deckHi} />
+          <g ref={pawL}>
+            <ellipse cx={47} cy={72.4} rx={5.6} ry={4.1} fill={C.outline} />
+            <ellipse cx={47} cy={72} rx={4.4} ry={3} fill={C.body} />
+          </g>
+          <g ref={pawR}>
+            <ellipse cx={73} cy={72.4} rx={5.6} ry={4.1} fill={C.outline} />
+            <ellipse cx={73} cy={72} rx={4.4} ry={3} fill={C.body} />
+          </g>
+        </g>
       </g>
     </svg>
   );

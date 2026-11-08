@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ago, BUILTIN_TOOLS, isBuiltin } from '@shared/tools';
 import type { OrbiEvent, ToolId } from '@shared/types';
 import { SimTag } from '../components/ui';
@@ -23,6 +24,7 @@ export function Compact() {
   const live = useApp((s) =>
     s.hub.sessions.find((x) => (x.state === 'working' || x.state === 'waiting') && Date.now() - x.updatedAt < 120_000),
   );
+  const greeting = useGreeting();
 
   if (toast) {
     return (
@@ -43,7 +45,10 @@ export function Compact() {
   let title: string;
   let sub: string | undefined;
   let dot: { color: string; live: boolean } | null = null;
-  if (live) {
+  if (greeting && !live) {
+    title = 'Oi! Cheguei';
+    sub = 'De olho nos seus agentes';
+  } else if (live) {
     title = live.state === 'waiting' ? `${toolLabel(live.tool)} aguarda você` : toolLabel(live.tool);
     sub = live.state === 'waiting' ? live.project : live.current;
     dot = { color: live.state === 'waiting' ? '#5eead4' : '#4fb7a2', live: live.state === 'working' };
@@ -67,6 +72,19 @@ export function Compact() {
       <UsageMini />
     </div>
   );
+}
+
+/** While the entrance plays, the island says hello instead of its usual status. */
+function useGreeting(): boolean {
+  const intro = useApp((s) => (s.reaction?.kind === 'intro' ? s.reaction : null));
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!intro) return;
+    setOn(true);
+    const t = setTimeout(() => setOn(false), Math.max(0, intro.until - Date.now()) + 600);
+    return () => clearTimeout(t);
+  }, [intro]);
+  return on;
 }
 
 /** Plan limits stay in sight even in the smallest island. Only real, unexpired windows. */
