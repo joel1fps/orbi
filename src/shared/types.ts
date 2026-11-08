@@ -225,7 +225,8 @@ export type IdleLevel = 'active' | 'drowsy' | 'asleep';
 export type SkillTargetId = 'claude' | 'codex' | 'gemini' | 'antigravity' | 'cursor';
 
 /** Per agent: installed by Orbi (current or outdated), or a folder with that name Orbi did not install. */
-export type SkillInstallState = 'installed' | 'update' | 'external';
+/** 'modified': Orbi installed it and the user edited the folder since. */
+export type SkillInstallState = 'installed' | 'update' | 'modified' | 'external';
 
 export interface SkillFileInfo {
   path: string;
@@ -286,6 +287,8 @@ export interface SkillCatalog {
   skills: SkillCatalogEntry[];
   targets: SkillTargetInfo[];
   installed: InstalledSkill[];
+  /** When the catalog in use was generated (ISO date). */
+  updatedAt?: string;
   /** Why the catalog could not be read, if it could not. */
   error?: string;
 }

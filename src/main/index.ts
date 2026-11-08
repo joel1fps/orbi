@@ -21,7 +21,7 @@ import { startDebugServer } from './debug';
 import { resource } from './resources';
 import { sessionFile } from './sessionFile';
 import { simulate } from './simulator';
-import { applyPlan, openSkillFolder, planInstall, skillsCatalog, uninstallSkill } from './skills/manager';
+import { applyPlan, openSkillFolder, planInstall, refreshCatalog, skillsCatalog, uninstallSkill } from './skills/manager';
 import { flush, loadStore, store } from './store';
 import {
   createWidget,
@@ -262,6 +262,7 @@ function registerIpc() {
   );
   ipcMain.handle('skills:uninstall', (_e, skillId: unknown, targetId: unknown) => uninstallSkill(String(skillId), targetId));
   ipcMain.on('skills:open', (_e, targetId: unknown, name: unknown) => openSkillFolder(targetId, name));
+  ipcMain.handle('skills:refresh', () => refreshCatalog());
   ipcMain.on('tool:launch', (_e, id: string) => {
     const t = store.settings.customTools.find((c) => `custom:${c.id}` === id);
     if (t) launch(t.target);

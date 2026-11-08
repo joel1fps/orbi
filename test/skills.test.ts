@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import {
   aggregateStatus,
   alsoVisibleTo,
+  folderFiles,
   isSafeRelPath,
   isScript,
   parseFrontmatter,
@@ -111,4 +112,22 @@ test('a package status in one agent sums up its folders', () => {
   assert.equal(aggregateStatus(['update', 'same']), 'update');
   assert.equal(aggregateStatus(['new', 'modified']), 'modified');
   assert.equal(aggregateStatus(['modified', 'conflict', 'new']), 'conflict');
+});
+
+test('catalog update: a folder keeps its own files, not nested skills', () => {
+  const blobs = [
+    { path: 'skills/pdf/SKILL.md', size: 10 },
+    { path: 'skills/pdf/scripts/a.py', size: 5 },
+    { path: 'skills/pdf/inner/SKILL.md', size: 3 },
+    { path: 'skills/pdf/inner/x.md', size: 2 },
+    { path: 'skills/pdf-extra/SKILL.md', size: 1 },
+    { path: 'README.md', size: 9 },
+  ];
+  // Same order as the build script (localeCompare).
+  assert.deepEqual(folderFiles(blobs, 'skills/pdf'), [
+    { path: 'scripts/a.py', size: 5 },
+    { path: 'SKILL.md', size: 10 },
+  ]);
+  assert.equal(folderFiles(blobs, 'skills/gone'), null);
+  assert.deepEqual(folderFiles([{ path: 'SKILL.md', size: 4 }, { path: 'x/SKILL.md', size: 1 }], '.'), [{ path: 'SKILL.md', size: 4 }]);
 });

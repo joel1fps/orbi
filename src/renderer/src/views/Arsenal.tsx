@@ -82,6 +82,17 @@ function Grid({ catalog, loading, onReload, onOpen }: { catalog: SkillCatalog; l
   const [mode, setMode] = useState<'all' | 'mine' | 'installed'>('all');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Todas');
+  const [updating, setUpdating] = useState(false);
+  const [updateNote, setUpdateNote] = useState('');
+  const update = async () => {
+    setUpdating(true);
+    setUpdateNote('Procurando versões novas no GitHub…');
+    const r = await window.orbi.skillsRefresh();
+    setUpdating(false);
+    setUpdateNote(r.message);
+    onReload();
+  };
+  const since = catalog.updatedAt ? new Date(catalog.updatedAt).toLocaleDateString('pt-BR') : null;
   const q = query.trim().toLowerCase();
   const pool = useMemo(() => {
     if (mode === 'mine') return catalog.skills.filter((s) => s.origin === 'refs' || s.mine);
@@ -122,7 +133,11 @@ function Grid({ catalog, loading, onReload, onOpen }: { catalog: SkillCatalog; l
         <span className="arsenal__count">
           {shown.length} {shown.length === 1 ? 'item' : 'itens'}
         </span>
+        <button className="btn btn--ghost" disabled={updating} title={since ? `Catálogo de ${since}` : undefined} onClick={() => void update()}>
+          <RefreshCw size={13} className={updating ? 'live__spin' : undefined} /> {updating ? 'Atualizando…' : 'Atualizar catálogo'}
+        </button>
       </div>
+      {updateNote ? <div className="arsenal__text arsenal__hint">{updateNote}</div> : null}
       {shown.length === 0 ? <div className="arsenal__empty">Nada encontrado.</div> : null}
       <div className="arsenal__grid">
         {shown.map((s) => (
@@ -137,6 +152,7 @@ function Grid({ catalog, loading, onReload, onOpen }: { catalog: SkillCatalog; l
 function Card({ s, onOpen }: { s: SkillCatalogEntry; onOpen: () => void }) {
   const installedIn = (Object.keys(s.installs) as SkillTargetId[]).filter((t) => s.installs[t] !== 'external');
   const update = Object.values(s.installs).includes('update');
+  const edited = Object.values(s.installs).includes('modified');
   return (
     <button className="acard" onClick={onOpen}>
       <div className="acard__top">
@@ -152,7 +168,7 @@ function Card({ s, onOpen }: { s: SkillCatalogEntry; onOpen: () => void }) {
             <span key={t} className="acard__agent" style={{ background: AGENT_COLOR[t] }} />
           ))}
         </span>
-        {update ? <span className="arsenal__tag arsenal__tag--warn">atualizar</span> : installedIn.length ? <span className="acard__ok"><Check size={12} /> {installedIn.length}</span> : null}
+        {edited ? <span className="arsenal__tag arsenal__tag--warn">editada</span> : update ? <span className="arsenal__tag arsenal__tag--warn">atualizar</span> : installedIn.length ? <span className="acard__ok"><Check size={12} /> {installedIn.length}</span> : null}
         {!installable(s) ? <span className="acard__manual">manual</span> : null}
       </div>
     </button>
@@ -256,7 +272,7 @@ function Detail({
             {catalog.targets.map((t) => {
               const supported = skill.support.includes(t.id);
               const state = skill.installs[t.id];
-              const label = !supported ? 'Sem suporte' : state === 'installed' ? 'Instalada' : state === 'update' ? 'Atualizar' : state === 'external' ? 'Pasta existente' : 'Instalar';
+              const label = !supported ? 'Sem suporte' : state === 'installed' ? 'Instalada' : state === 'update' ? 'Atualizar' : state === 'modified' ? 'Editada por você' : state === 'external' ? 'Pasta existente' : 'Instalar';
               return (
                 <div key={t.id} className="agent">
                   <button
@@ -272,7 +288,7 @@ function Detail({
                     </span>
                     {supported && !t.detected ? <span className="agent__hint">não encontrado</span> : null}
                   </button>
-                  {state === 'installed' || state === 'update' ? (
+                  {state === 'installed' || state === 'update' || state === 'modified' ? (
                     <button className="agent__remove" disabled={busy} onClick={() => void remove(t.id)}>
                       {confirmRemove === t.id ? 'Confirmar remoção' : 'Remover'}
                     </button>

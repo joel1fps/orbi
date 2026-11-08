@@ -64,6 +64,7 @@ const api = {
     ipcRenderer.invoke('skills:apply', planId, opts),
   skillsUninstall: (skillId: string, targetId: SkillTargetId): Promise<SkillActionResult> => ipcRenderer.invoke('skills:uninstall', skillId, targetId),
   skillsOpen: (targetId: SkillTargetId, name?: string) => ipcRenderer.send('skills:open', targetId, name),
+  skillsRefresh: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('skills:refresh'),
   quit: () => ipcRenderer.send('app:quit'),
 };
 

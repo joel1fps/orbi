@@ -183,6 +183,32 @@ export function uninstallSplit(installed: { path: string; sha256: string }[], on
   return { remove, keep: [...onDisk.keys()].filter((p) => !removed.has(p)) };
 }
 
+// ---------- catalog update ----------
+
+export interface TreeBlob {
+  path: string;
+  size?: number;
+}
+
+/**
+ * The files of the skill folder `dir` in a repository tree (a GitHub
+ * `git/trees?recursive=1` listing), relative to it, without nested skill
+ * folders; null when the folder no longer has a SKILL.md.
+ */
+export function folderFiles(blobs: TreeBlob[], dir: string): { path: string; size: number }[] | null {
+  const inside = (p: string) => dir === '.' || p.startsWith(dir + '/');
+  const rel = (p: string) => (dir === '.' ? p : p.slice(dir.length + 1));
+  if (!blobs.some((b) => inside(b.path) && rel(b.path) === 'SKILL.md')) return null;
+  const nested = blobs
+    .filter((b) => inside(b.path) && rel(b.path) !== 'SKILL.md' && /(^|\/)SKILL\.md$/.test(rel(b.path)))
+    .map((b) => rel(b.path).slice(0, -'/SKILL.md'.length));
+  return blobs
+    .filter((b) => inside(b.path))
+    .map((b) => ({ path: rel(b.path), size: b.size ?? 0 }))
+    .filter((f) => !nested.some((n) => f.path.startsWith(n + '/')))
+    .sort((a, b) => a.path.localeCompare(b.path));
+}
+
 /** One status for a package in one agent: the most cautious of its folders. */
 export function aggregateStatus(statuses: TargetStatus[]): TargetStatus {
   if (statuses.includes('conflict')) return 'conflict';

@@ -12,14 +12,13 @@ import { parseClaudeUsage } from './limits';
  * Claude plan limits straight from the account — the same request Claude
  * Code's /usage makes — using the login Claude Code keeps on this computer:
  * ~/.claude/.credentials.json on Windows and Linux, the Keychain item
- * "Claude Code-credentials" on macOS. The token is automatically refreshed
- * when needed so limits stay up-to-date even when Claude Code is not running.
- * Can be turned off in Ferramentas.
+ * "Claude Code-credentials" on macOS. Read-only: Orbi never renews or writes
+ * that login — Claude Code renews it itself the next time it runs, and the
+ * file watcher below picks the new token up. Can be turned off in Ferramentas.
  */
 export const CLAUDE_ACCOUNT_SOURCE = 'Sua conta Claude (login do Claude Code)';
 const POLL_MS = 3 * 60_000;
-const CLAUDE_CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
-const CLAUDE_TOKEN_URL = 'https://platform.claude.com/v1/oauth/token';
+const EXPIRED_NOTE = 'O login do Claude Code venceu. Ele renova sozinho na próxima vez que você usar o Claude Code.';
 
 let timer: NodeJS.Timeout | null = null;
 let soonTimer: NodeJS.Timeout | null = null;
@@ -29,36 +28,22 @@ let backoffUntil = 0;
 
 interface Login {
   token: string;
-  refreshToken?: string;
-  scopes?: string[];
   plan?: string;
   expiresAt?: number;
-  filePath?: string;
 }
 
-function fromJson(text: string, filePath?: string): Login | null {
+function fromJson(text: string): Login | null {
   try {
     const o = (
       JSON.parse(text) as {
         claudeAiOauth?: {
           accessToken?: string;
-          refreshToken?: string;
-          scopes?: string[];
           expiresAt?: number;
           subscriptionType?: string;
         };
       }
     ).claudeAiOauth;
-    return o?.accessToken
-      ? {
-          token: o.accessToken,
-          refreshToken: o.refreshToken,
-          scopes: o.scopes,
-          plan: o.subscriptionType,
-          expiresAt: o.expiresAt,
-          filePath,
-        }
-      : null;
+    return o?.accessToken ? { token: o.accessToken, plan: o.subscriptionType, expiresAt: o.expiresAt } : null;
   } catch {
     return null;
   }
@@ -77,7 +62,7 @@ export async function readLogin(): Promise<Login | null> {
   const dir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
   const file = join(dir, '.credentials.json');
   try {
-    const login = fromJson(await fs.readFile(file, 'utf8'), file);
+    const login = fromJson(await fs.readFile(file, 'utf8'));
     if (login) return login;
   } catch {
     /* not a file-based login */
@@ -87,59 +72,6 @@ export async function readLogin(): Promise<Login | null> {
     return text ? fromJson(text) : null;
   }
   return null;
-}
-
-async function refreshClaudeOAuth(login: Login): Promise<boolean> {
-  if (!login.refreshToken) return false;
-  try {
-    const res = await fetch(CLAUDE_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type: 'refresh_token',
-        refresh_token: login.refreshToken,
-        client_id: CLAUDE_CLIENT_ID,
-        scope: Array.isArray(login.scopes) ? login.scopes.join(' ') : (login.scopes ?? ''),
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) return false;
-    const data = (await res.json()) as {
-      access_token?: string;
-      refresh_token?: string;
-      expires_in?: number;
-    };
-    if (!data.access_token) return false;
-
-    login.token = data.access_token;
-    if (data.refresh_token) login.refreshToken = data.refresh_token;
-    login.expiresAt = Date.now() + (data.expires_in ?? 28800) * 1000;
-
-    if (login.filePath) {
-      try {
-        let existing: Record<string, unknown> = {};
-        try {
-          existing = JSON.parse(await fs.readFile(login.filePath, 'utf8')) as Record<string, unknown>;
-        } catch {}
-        const oauth = (existing.claudeAiOauth ?? {}) as Record<string, unknown>;
-        existing.claudeAiOauth = {
-          ...oauth,
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token ?? oauth.refreshToken,
-          expiresAt: login.expiresAt,
-        };
-        const tmp = `${login.filePath}.tmp.${Date.now()}`;
-        await fs.writeFile(tmp, JSON.stringify(existing, null, 2), 'utf8');
-        await fs.rename(tmp, login.filePath);
-      } catch (err) {
-        console.error('[orbi] could not save refreshed credentials', err);
-      }
-    }
-    return true;
-  } catch (err) {
-    console.error('[orbi] claude token refresh error', err);
-    return false;
-  }
 }
 
 interface ClaudeDesktopUsage {
@@ -234,18 +166,16 @@ export async function refreshClaudeUsage(): Promise<void> {
     return;
   }
 
-  // If token is expired or close to expiry (within 2 minutes), proactively refresh it
-  if (login.expiresAt && login.expiresAt < Date.now() + 2 * 60_000) {
-    const refreshed = await refreshClaudeOAuth(login);
-    if (!refreshed) {
-      if (desktopUsage) {
-        hub.setUsage(desktopUsage);
-        note(undefined);
-        return;
-      }
-      note('O login do Claude expirou. Clique em Conectar conta Claude.');
+  // An expired token is Claude Code's to renew: renewing it here would rotate
+  // the refresh token behind Claude Code's back and could sign it out.
+  if (login.expiresAt && login.expiresAt < Date.now()) {
+    if (desktopUsage) {
+      hub.setUsage(desktopUsage);
+      note(undefined);
       return;
     }
+    note(EXPIRED_NOTE);
+    return;
   }
 
   const queryUsage = (token: string) =>
@@ -260,13 +190,7 @@ export async function refreshClaudeUsage(): Promise<void> {
     });
 
   try {
-    let res = await queryUsage(login.token);
-    if (res.status === 401 && login.refreshToken) {
-      const refreshed = await refreshClaudeOAuth(login);
-      if (refreshed) {
-        res = await queryUsage(login.token);
-      }
-    }
+    const res = await queryUsage(login.token);
 
     if (res.status === 429) {
       backoffUntil = Date.now() + 10 * 60_000;
@@ -279,7 +203,7 @@ export async function refreshClaudeUsage(): Promise<void> {
         note(undefined);
         return;
       }
-      note('A Anthropic recusou o login. Clique em Conectar conta Claude para entrar de novo.');
+      note(res.status === 401 ? EXPIRED_NOTE : 'A Anthropic recusou o login. Clique em Conectar conta Claude para entrar de novo.');
       return;
     }
     if (!res.ok) {

@@ -17,10 +17,11 @@ import type {
 } from '@shared/types';
 import { hub } from '../hub';
 import { resource } from '../resources';
-import { dataDir } from '../store';
+import { dataDir, store } from '../store';
 import {
   aggregateStatus,
   alsoVisibleTo,
+  folderFiles,
   isScript,
   parseFrontmatter,
   redundantTargets,
@@ -84,12 +85,34 @@ const FETCH_TIMEOUT_MS = 20_000;
 const PLAN_TTL_MS = 10 * 60_000;
 const MAX_SCAN_FILES = 500;
 
+interface IndexFile {
+  version: number;
+  generatedAt?: string;
+  packages: IndexPackage[];
+}
+
 let indexCache: IndexPackage[] | null = null;
+let indexUpdatedAt: string | undefined;
+
+/** "Atualizar catálogo" writes here; the copy bundled with the app wins again once it is newer (an app update). */
+const updatedIndexFile = () => join(dataDir(), 'skills-index.json');
+
+function readIndexFile(path: string): IndexFile | null {
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf8')) as IndexFile;
+    return raw.version === 2 && Array.isArray(raw.packages) ? raw : null;
+  } catch {
+    return null;
+  }
+}
 
 function loadIndex(): IndexPackage[] {
   if (indexCache) return indexCache;
-  const raw = JSON.parse(readFileSync(resource('skills-index.json'), 'utf8')) as { version: number; packages: IndexPackage[] };
-  if (raw.version !== 2 || !Array.isArray(raw.packages)) throw new Error('Formato do catálogo desconhecido.');
+  const bundled = readIndexFile(resource('skills-index.json'));
+  const updated = existsSync(updatedIndexFile()) ? readIndexFile(updatedIndexFile()) : null;
+  const raw = updated && (!bundled || (updated.generatedAt ?? '') > (bundled.generatedAt ?? '')) ? updated : bundled;
+  if (!raw) throw new Error('Formato do catálogo desconhecido.');
+  indexUpdatedAt = raw.generatedAt;
   // The index ships with the app, but it is checked like any input: a folder that fails is left out, loudly.
   indexCache = raw.packages.map((p) => {
     const skills = p.skills.filter((s) => {
@@ -200,15 +223,23 @@ async function move(from: string, to: string) {
 
 const fileInfo = (f: ManifestFile) => ({ path: f.path, size: f.size, script: isScript(f.path) });
 
-function installsOf(p: IndexPackage, ledger: LedgerEntry[]): Partial<Record<SkillTargetId, SkillInstallState>> {
+async function installsOf(p: IndexPackage, ledger: LedgerEntry[]): Promise<Partial<Record<SkillTargetId, SkillInstallState>>> {
   const out: Partial<Record<SkillTargetId, SkillInstallState>> = {};
   if (!p.source || p.skills.length === 0) return out;
   for (const t of TARGET_IDS) {
     const there = p.skills.filter((s) => existsSync(skillDir(t, s.name)));
     if (there.length === 0) continue;
     const mine = there.map((s) => findEntry(ledger, p.id, t, s.name));
-    if (mine.some((m) => !m)) out[t] = 'external';
-    else out[t] = there.length === p.skills.length && mine.every((m) => m!.commit === p.source!.commit) ? 'installed' : 'update';
+    if (mine.some((m) => !m)) {
+      out[t] = 'external';
+      continue;
+    }
+    // Hashing only folders Orbi installed: a few small folders, so this stays cheap.
+    const statuses = await Promise.all(
+      there.map(async (s, i) => targetStatus({ onDisk: await hashDir(skillDir(t, s.name)), ledger: mine[i]!, commit: p.source!.commit })),
+    );
+    if (statuses.includes('modified')) out[t] = 'modified';
+    else out[t] = there.length === p.skills.length && statuses.every((s) => s === 'same') ? 'installed' : 'update';
   }
   return out;
 }
@@ -259,7 +290,8 @@ export async function skillsCatalog(): Promise<SkillCatalog> {
     return { skills: [], targets, installed: [], error: `Não foi possível ler o catálogo: ${(err as Error).message}` };
   }
   const ledger = await readLedger();
-  const skills: SkillCatalogEntry[] = index.map((p) => ({
+  const installs = await Promise.all(index.map((p) => installsOf(p, ledger)));
+  const skills: SkillCatalogEntry[] = index.map((p, i) => ({
     id: p.id,
     name: p.name,
     description: p.description,
@@ -274,9 +306,94 @@ export async function skillsCatalog(): Promise<SkillCatalog> {
     skills: p.skills.map((s) => ({ name: s.name, files: s.files.map(fileInfo) })),
     hasScripts: p.hasScripts,
     manual: p.manual,
-    installs: installsOf(p, ledger),
+    installs: installs[i],
   }));
-  return { skills, targets, installed: await scanInstalled(ledger) };
+  return { skills, targets, installed: await scanInstalled(ledger), updatedAt: indexUpdatedAt };
+}
+
+// ---------- catalog update ----------
+
+const GH_API = 'https://api.github.com';
+let refreshing = false;
+
+async function gh<T>(path: string, accept = 'application/vnd.github+json'): Promise<T> {
+  const token = store.getGithubToken();
+  const res = await fetch(`${GH_API}${path}`, {
+    headers: { accept, 'user-agent': 'orbi-desktop', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (res.status === 403 || res.status === 429) throw new Error('limite de consultas do GitHub atingido; conecte o GitHub em Ferramentas ou tente mais tarde');
+  if (!res.ok) throw new Error(`GitHub respondeu ${res.status}`);
+  return (accept.endsWith('.sha') ? await res.text() : await res.json()) as T;
+}
+
+/**
+ * "Atualizar catálogo": moves every installable package to the newest commit
+ * of its repository, re-reading each folder's files and hashing them again,
+ * exactly as scripts/build-skills-index.mjs does. One API call per repository
+ * when nothing changed, two plus the downloads when it did. New items from
+ * the references site still need the script.
+ */
+export async function refreshCatalog(): Promise<{ ok: boolean; message: string }> {
+  if (refreshing) return { ok: false, message: 'O catálogo já está sendo atualizado.' };
+  refreshing = true;
+  try {
+    const index = loadIndex().map((p) => ({ ...p, skills: p.skills.map((s) => ({ ...s })) }));
+    const byRepo = new Map<string, IndexPackage[]>();
+    for (const p of index) if (p.source && p.skills.length) byRepo.set(p.source.repo, [...(byRepo.get(p.source.repo) ?? []), p]);
+    let updated = 0;
+    const failed: string[] = [];
+    for (const [repo, pkgs] of byRepo) {
+      try {
+        const commit = (await gh<string>(`/repos/${repo}/commits/HEAD`, 'application/vnd.github.sha')).trim();
+        if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error('commit inválido');
+        if (pkgs.every((p) => p.source!.commit === commit)) continue;
+        const tree = await gh<{ truncated?: boolean; tree: { path: string; type: string; size?: number }[] }>(`/repos/${repo}/git/trees/${commit}?recursive=1`);
+        if (tree.truncated) throw new Error('repositório grande demais para ler de uma vez');
+        const blobs = tree.tree.filter((e) => e.type === 'blob');
+        for (const p of pkgs) {
+          const skills: IndexFolder[] = [];
+          for (const s of p.skills) {
+            const listed = folderFiles(blobs, s.path);
+            if (!listed) continue;
+            if (listed.length > 200 || listed.reduce((n, f) => n + f.size, 0) > 5 * 1024 * 1024) throw new Error(`${s.name} ficou grande demais`);
+            const files: ManifestFile[] = [];
+            for (const f of listed) {
+              const parts = [...(s.path === '.' ? [] : s.path.split('/')), ...f.path.split('/')];
+              const res = await fetch(`https://raw.githubusercontent.com/${repo}/${commit}/${parts.map(encodeURIComponent).join('/')}`, {
+                signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+              });
+              if (!res.ok) throw new Error(`falha ao baixar ${s.name}/${f.path}`);
+              const bytes = Buffer.from(await res.arrayBuffer());
+              files.push({ path: f.path, size: bytes.length, sha256: sha256(bytes) });
+            }
+            if (validateManifest({ name: s.name, files }).errors.length === 0) skills.push({ ...s, files });
+          }
+          if (skills.length === 0) throw new Error(`${p.name} não tem mais pastas SKILL.md válidas`);
+          p.skills = skills;
+          p.hasScripts = skills.some((s) => s.files.some((f) => isScript(f.path)));
+          p.source = { ...p.source!, commit, url: p.source!.url.replace(/\/tree\/[0-9a-f]{40}/, `/tree/${commit}`) };
+          updated++;
+        }
+      } catch (err) {
+        failed.push(`${repo} (${(err as Error).message})`);
+      }
+    }
+    const generatedAt = new Date().toISOString();
+    const tmp = `${updatedIndexFile()}.tmp`;
+    await writeFile(tmp, JSON.stringify({ version: 2, generatedAt, packages: index }, null, 2));
+    await rename(tmp, updatedIndexFile());
+    indexCache = null;
+    const head = updated ? `${updated} ${updated === 1 ? 'item atualizado' : 'itens atualizados'}.` : 'Tudo já estava na versão mais nova.';
+    return {
+      ok: failed.length === 0,
+      message: failed.length ? `${head} Não consegui ler ${failed.length}: ${failed.slice(0, 3).join('; ')}${failed.length > 3 ? '…' : ''}` : head,
+    };
+  } catch (err) {
+    return { ok: false, message: `Não foi possível atualizar: ${(err as Error).message}` };
+  } finally {
+    refreshing = false;
+  }
 }
 
 // ---------- plan & apply ----------
