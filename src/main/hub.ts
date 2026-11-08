@@ -273,7 +273,7 @@ class Hub {
     const sessions = [...this.sessions.values()];
     const pendingTools = new Set([...this.pending.values()].map((p) => p.req.tool));
 
-    const agent = (id: 'claude' | 'codex' | 'antigravity' | 'gemini' | 'hermes', source: string, hint?: ToolStatus['installHint']) => {
+    const agent = (id: 'claude' | 'codex' | 'antigravity' | 'gemini', source: string, hint?: ToolStatus['installHint']) => {
       const d = this.detection[id];
       const mine = sessions.filter((s) => s.tool === id && !s.simulated).sort((a, b) => b.updatedAt - a.updatedAt);
       const live = mine.find((s) => (s.state === 'working' || s.state === 'waiting') && now - s.updatedAt < ACTIVE_MS);
@@ -324,10 +324,6 @@ class Hub {
       agent('gemini', 'Comando gemini + ~/.gemini/tmp', {
         label: 'Como instalar',
         url: 'https://github.com/google-gemini/gemini-cli',
-      }),
-      agent('hermes', 'Comando hermes + ~/.hermes', {
-        label: 'Como instalar',
-        url: 'https://github.com/NousResearch/hermes-agent',
       }),
     ];
 

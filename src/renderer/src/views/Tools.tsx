@@ -7,7 +7,7 @@ import { useApp } from '../store';
 
 export function ToolsSheet() {
   const tools = useApp((s) => s.hub.tools);
-  const agents = tools.filter((t) => ['claude', 'codex', 'antigravity', 'gemini', 'hermes'].includes(t.id));
+  const agents = tools.filter((t) => ['claude', 'codex', 'antigravity', 'gemini'].includes(t.id));
   const custom = tools.filter((t) => t.id.startsWith('custom:'));
 
   return (

@@ -99,7 +99,6 @@ Nada é estimado ou inventado. Sem fonte de dados, aparece "não instalado", "n�
 | **Codex** | Funciona sem configurar | Sessões em `~/.codex/sessions`: tarefas, comandos com código de saída e limites de 5 horas e semana do plano. |
 | | Permissões na ilha, depois de **Conectar permissões** (aba Ferramentas) | Um hook `PermissionRequest` em `~/.codex/hooks.json` (com backup; desconectar remove só ele). O Codex só o executa depois que você o aprova uma vez com `/hooks`. Sem resposta no tempo escolhido, o Codex pergunta no terminal. |
 | **Gemini CLI** | Detecção | Comando `gemini` e `~/.gemini/tmp`. Não está instalado nesta máquina. |
-| **Hermes Agent** | Detecção | Comando `hermes` e `~/.hermes`. Não está instalado nesta máquina. |
 | **GitHub** | Depois de colar um token (ou com `gh auth login`) | API GraphQL oficial: seus PRs abertos com estado do CI, revisões pendentes, CI do branch padrão de um repositório escolhido e sequência de contribuições. O token fica criptografado pelo Windows (DPAPI). |
 | **Seus atalhos** | Aba Ferramentas | Qualquer URL, programa ou comando, aberto pela ilha. Sem métricas. |
 

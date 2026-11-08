@@ -2,7 +2,7 @@ export type ViewMode = 'compact' | 'panel';
 export type PanelTab = 'home' | 'live' | 'arsenal' | 'github' | 'tools' | 'settings';
 export type MascotStyle = '2d' | '3d';
 
-export type BuiltinToolId = 'claude' | 'codex' | 'antigravity' | 'gemini' | 'hermes' | 'github';
+export type BuiltinToolId = 'claude' | 'codex' | 'antigravity' | 'gemini' | 'github';
 export type PlanTool = 'claude' | 'codex' | 'antigravity' | 'gemini';
 export type ToolId = BuiltinToolId | `custom:${string}`;
 

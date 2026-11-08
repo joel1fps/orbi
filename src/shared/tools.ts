@@ -4,8 +4,7 @@ export const BUILTIN_TOOLS: Record<BuiltinToolId, { name: string; short: string;
   claude: { name: 'Claude Code', short: 'Claude', color: '#e8956b' },
   codex: { name: 'Codex', short: 'Codex', color: '#4fd1b5' },
   antigravity: { name: 'Antigravity', short: 'Antigravity', color: '#e38bd9' },
-  gemini: { name: 'Gemini CLI', short: 'Gemini', color: '#8ab4f8' },
-  hermes: { name: 'Hermes Agent', short: 'Hermes', color: '#b794f6' },
+  gemini: { name: 'Gemini CLI', short: 'Gemini CLI', color: '#8ab4f8' },
   github: { name: 'GitHub', short: 'GitHub', color: '#f27479' },
 };
 

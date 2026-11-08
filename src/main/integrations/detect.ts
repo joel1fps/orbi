@@ -69,7 +69,6 @@ const PROBES: Probe[] = [
   },
   // ~/.gemini also exists for Antigravity, so only the CLI's own tmp/ counts as Gemini CLI data.
   { id: 'gemini', commands: ['gemini'], dataDir: join(home, '.gemini', 'tmp'), activityDir: join(home, '.gemini', 'tmp'), depth: 3 },
-  { id: 'hermes', commands: ['hermes'], dataDir: join(home, '.hermes'), activityDir: join(home, '.hermes', 'sessions'), depth: 2 },
   { id: 'github', commands: ['gh'] },
 ];
 
