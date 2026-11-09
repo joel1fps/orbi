@@ -1,0 +1,59 @@
+name: Release
+
+# Uma tag v* (ex.: v0.2.0) gera o instalador e publica Orbi-Setup.exe e o seu
+# SHA-256 numa Release. O site e o install.ps1 baixam de releases/latest/download.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: A tag bate com a versão do package.json
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne $env:GITHUB_REF_NAME) {
+            throw "A tag $env:GITHUB_REF_NAME não bate com a versão $version do package.json."
+          }
+
+      - run: npm ci
+      # O Electron 44 só baixa o binário no primeiro uso; o electron-builder usa node_modules/electron/dist.
+      - name: Baixar o Electron
+        run: node node_modules/electron/install.js
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Gerar o instalador
+        run: npm run dist -- --publish never
+        env:
+          # O instalador não é assinado (ainda); sem isso o electron-builder procura um certificado.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Gerar o SHA-256
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist/Orbi-Setup.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText("$PWD/dist/Orbi-Setup.exe.sha256", "$hash  Orbi-Setup.exe`n")
+          Write-Host "SHA-256: $hash"
+
+      - name: Publicar a Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            dist/Orbi-Setup.exe dist/Orbi-Setup.exe.sha256 `
+            --title "Orbi $env:GITHUB_REF_NAME" `
+            --generate-notes

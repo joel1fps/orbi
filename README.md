@@ -86,7 +86,7 @@ npm start          # compila e abre o Orbi
 Para gerar o instalador:
 
 ```bash
-npm run dist       # gera dist/Orbi-Setup-<versão>.exe
+npm run dist       # gera dist/Orbi-Setup.exe
 ```
 
 O instalador instala só para o seu usuário, sem pedir administrador, e cria atalhos na Área de Trabalho e no menu Iniciar. O executável não é assinado, então o Windows SmartScreen pode avisar na primeira execução. O Orbi fica na bandeja do Windows; `Ctrl+Alt+O` abre e recolhe o painel.

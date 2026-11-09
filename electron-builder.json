@@ -42,6 +42,6 @@
     "shortcutName": "Orbi",
     "deleteAppDataOnUninstall": false,
     "include": "resources/installer.nsh",
-    "artifactName": "Orbi-Setup-${version}.${ext}"
+    "artifactName": "Orbi-Setup.${ext}"
   }
 }
