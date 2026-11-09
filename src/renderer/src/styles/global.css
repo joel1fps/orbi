@@ -1361,6 +1361,9 @@ button {
   flex-direction: column;
   gap: 5px;
   min-height: 136px;
+  /* ~100 cards: skip laying out and painting the ones scrolled out of view. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 136px;
   padding: 11px 12px 10px;
   border-radius: 14px;
   border: 1px solid var(--line);

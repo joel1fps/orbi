@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, FolderGit2, FolderOpen, House, LayoutGrid, Radio, Swords, Settings as SettingsIcon, Check, X, RefreshCw, RotateCw } from 'lucide-react';
 import { ago, BUILTIN_TOOLS, isBuiltin, until } from '@shared/tools';
 import type { AgentSession, CiState, PlanUsage, ToolStatus } from '@shared/types';
@@ -7,7 +7,7 @@ import { headlineWindow, isStale, levelTone, liveWindow, PLAN_NAME, PLAN_TONE, P
 import { Mascot } from '../mascot/Mascot';
 import { useApp } from '../store';
 import { PermissionCard } from './PermissionCard';
-import { ArsenalSheet } from './Arsenal';
+import { ArsenalSheet, prefetchCatalog } from './Arsenal';
 import { GithubSheet } from './GitHub';
 import { AgentTabs, useAgentView } from './agents';
 import { LiveSession } from './Live';
@@ -16,6 +16,7 @@ import { ToolsSheet } from './Tools';
 
 export function Panel() {
   const tab = useApp((s) => s.tab);
+  useEffect(prefetchCatalog, []);
   return (
     <div className={tab === 'home' ? 'panel' : tab === 'live' ? 'live' : 'sheet'}>
       <PanelHead />

@@ -37,15 +37,32 @@ const kb = (n: number) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toF
 const short = (sha: string) => sha.slice(0, 7);
 const installable = (s: SkillCatalogEntry) => Boolean(s.source) && s.skills.length > 0;
 
+/**
+ * The last catalog read, kept across tab switches: reopening the Arsenal shows
+ * it at once and refreshes behind it, instead of a short "Carregando" box that
+ * made the island shrink and then jump to the full grid.
+ */
+let lastCatalog: SkillCatalog | null = null;
+
+export async function loadCatalog(): Promise<SkillCatalog> {
+  lastCatalog = await window.orbi.skillsCatalog();
+  return lastCatalog;
+}
+
+/** Read the catalog ahead of the first visit (the panel calls this when it opens). */
+export function prefetchCatalog() {
+  if (!lastCatalog) void loadCatalog().catch(() => undefined);
+}
+
 export function ArsenalSheet() {
-  const [catalog, setCatalog] = useState<SkillCatalog | null>(null);
+  const [catalog, setCatalog] = useState<SkillCatalog | null>(lastCatalog);
   const [screen, setScreen] = useState<Screen>({ type: 'grid' });
   const [loading, setLoading] = useState(false);
 
   const reload = async () => {
     setLoading(true);
     try {
-      setCatalog(await window.orbi.skillsCatalog());
+      setCatalog(await loadCatalog());
     } finally {
       setLoading(false);
     }
