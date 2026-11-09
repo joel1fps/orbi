@@ -135,4 +135,8 @@ src/shared/     tipos e utilitários
 resources/      ícones, catálogo de skills e instalador
 ```
 
+## Licença
+
+[MIT](LICENSE).
+
 <sub>As demonstrações acima usam dados fictícios.</sub>
